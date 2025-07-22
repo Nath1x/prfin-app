@@ -8,7 +8,8 @@ function App() {
 
   useEffect(() => {
     // Fetch para la ruta principal del backend
-    fetch('http://localhost:3000/')
+    // AHORA USA LA VARIABLE DE ENTORNO VITE_API_URL
+    fetch(import.meta.env.VITE_API_URL + '/')
       .then(response => response.text())
       .then(data => setBackendMessage(data))
       .catch(error => {
@@ -17,7 +18,8 @@ function App() {
       });
 
     // Fetch para la ruta de prueba de la base de datos
-    fetch('http://localhost:3000/test-db')
+    // AHORA USA LA VARIABLE DE ENTORNO VITE_API_URL
+    fetch(import.meta.env.VITE_API_URL + '/test-db')
       .then(response => response.json())
       .then(data => {
         if (data.message) {
