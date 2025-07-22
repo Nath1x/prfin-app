@@ -24,6 +24,10 @@ const pool = new Pool({
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
+    // ¡NUEVA CONFIGURACIÓN SSL PARA RENDER!
+    ssl: {
+        rejectUnauthorized: false // Permite la conexión SSL sin verificar el certificado (para Render)
+    }
 });
 
 // Inicializar cliente de Twilio
