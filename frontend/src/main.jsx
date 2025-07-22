@@ -5,7 +5,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import App from './App.jsx'; // Pantalla de bienvenida / estado
 import Login from './pages/Login.jsx'; // Página de login
 import Dashboard from './pages/Dashboard.jsx'; // Dashboard del usuario
-import AdminDashboard from './pages/AdminDashboard.jsx'; // NUEVO: Panel de administración
+import AdminDashboard from './pages/AdminDashboard.jsx'; // Panel de administración
 import './index.css';
 
 // Componente auxiliar para proteger rutas (para usuarios autenticados)
@@ -31,6 +31,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <Routes>
         <Route path="/" element={<App />} /> {/* Pantalla de bienvenida */}
         <Route path="/login" element={<Login />} /> {/* Página de login */}
+        
         {/* Ruta protegida para el dashboard de usuario */}
         <Route
           path="/dashboard"
@@ -40,6 +41,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             </PrivateRoute>
           }
         />
+        
         {/* NUEVA RUTA PROTEGIDA para el panel de administración */}
         <Route
           path="/admin"
@@ -49,7 +51,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             </AdminRoute>
           }
         />
-        {/* Aquí añadiríamos más rutas */}
+        {/* Aquí puedes añadir más rutas si lo necesitas */}
       </Routes>
     </Router>
   </React.StrictMode>,
