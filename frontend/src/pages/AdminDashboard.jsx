@@ -46,7 +46,8 @@ function AdminDashboard() {
       }
       setLoading(true); // Activa estado de carga antes de fetch
       try {
-          const response = await fetch('http://localhost:3000/api/admin/usuarios', {
+          // ¡NUEVO! Usa la variable de entorno para la URL del backend
+          const response = await fetch(import.meta.env.VITE_API_URL + '/api/admin/usuarios', {
               headers: {
                   'Authorization': `Bearer ${token}`
               }
@@ -83,7 +84,8 @@ function AdminDashboard() {
     }
     const token = localStorage.getItem('token');
     try {
-        const response = await fetch(`http://localhost:3000/api/admin/pagos/${userId}`, {
+        // ¡NUEVO! Usa la variable de entorno para la URL del backend
+        const response = await fetch(import.meta.env.VITE_API_URL + `/api/admin/pagos/${userId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -117,7 +119,8 @@ function AdminDashboard() {
     }
     // setLoading(true); // Se controla desde fetchUsers si se llama primero
     try {
-      const response = await fetch('http://localhost:3000/api/admin/prestamos', {
+      // ¡NUEVO! Usa la variable de entorno para la URL del backend
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/admin/prestamos', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -178,7 +181,8 @@ function AdminDashboard() {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/api/register', {
+      // ¡NUEVO! Usa la variable de entorno para la URL del backend
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -233,7 +237,8 @@ function AdminDashboard() {
 
 
     try {
-      const response = await fetch('http://localhost:3000/api/admin/prestamos', {
+      // ¡NUEVO! Usa la variable de entorno para la URL del backend
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/admin/prestamos', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -293,7 +298,8 @@ function AdminDashboard() {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/api/admin/pagar', {
+      // ¡NUEVO! Usa la variable de entorno para la URL del backend
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/admin/pagar', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -342,7 +348,8 @@ function AdminDashboard() {
 
     if (window.confirm('¿Estás seguro de que quieres eliminar este préstamo? Esto borrará todas sus cuotas asociadas y ajustará el saldo del usuario.')) {
         try {
-            const response = await fetch(`http://localhost:3000/api/admin/prestamos/${loanId}`, {
+            // ¡NUEVO! Usa la variable de entorno para la URL del backend
+            const response = await fetch(import.meta.env.VITE_API_URL + `/api/admin/prestamos/${loanId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`

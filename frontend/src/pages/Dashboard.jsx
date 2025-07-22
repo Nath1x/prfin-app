@@ -19,7 +19,8 @@ function Dashboard() {
 
       try {
         // Obtener datos del usuario
-        const userResponse = await fetch('http://localhost:3000/api/me', {
+        // ¡NUEVO! Usa la variable de entorno para la URL del backend
+        const userResponse = await fetch(import.meta.env.VITE_API_URL + '/api/me', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -39,7 +40,8 @@ function Dashboard() {
         }
 
         // Obtener pagos del usuario
-        const paymentsResponse = await fetch('http://localhost:3000/api/me/pagos', {
+        // ¡NUEVO! Usa la variable de entorno para la URL del backend
+        const paymentsResponse = await fetch(import.meta.env.VITE_API_URL + '/api/me/pagos', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
