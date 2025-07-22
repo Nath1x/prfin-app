@@ -15,7 +15,8 @@ function Login() {
     setMessage(''); // Limpia mensajes anteriores
 
     try {
-      const response = await fetch('http://localhost:3000/api/login', {
+      // ¡NUEVO! Usa la variable de entorno para la URL del backend
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
