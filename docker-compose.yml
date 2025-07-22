@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: prfin_db             # Nuevo nombre de la DB
+      POSTGRES_USER: prfin_user         # Nuevo usuario de la DB
+      POSTGRES_PASSWORD: eliettevallejo # Nueva contraseña de la DB (¡CÁMBIALA POR UNA SEGURA LUEGO!)
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:
