@@ -434,7 +434,7 @@ app.post('/api/admin/pagar', authenticateToken('admin'), async (req, res) => {
 // Obtener todos los usuarios (para el admin)
 app.get('/api/admin/usuarios', authenticateToken('admin'), async (req, res) => {
     try {
-        const result = await pool.query('SELECT id, nombre_completo, telefono_whatsapp, saldo_pendiente_total, activo, fecha_creacion FROM usuarios ORDER BY fecha_creacion DESC');
+        const result = await pool.query('SELECT id, nombre_completo, telefono_whatsapp, saldo_pendiente_total, activo, rol, cobrador_asignado_id, fecha_creacion FROM usuarios ORDER BY fecha_creacion DESC'); // ¡CORREGIDO! Aquí se añadieron rol y cobrador_asignado_id
         res.json(result.rows);
     } catch (error) {
         console.error('Error al obtener usuarios (admin):', error);
