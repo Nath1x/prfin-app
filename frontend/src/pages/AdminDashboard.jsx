@@ -12,6 +12,8 @@ function AdminDashboard() {
   const [newUserName, setNewUserName] = useState('');
   const [newUserPhone, setNewUserPhone] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
+  // ¡NUEVO ESTADO! Para el cobrador seleccionado al registrar nuevo usuario
+  const [selectedCobradorForNewUser, setSelectedCobradorForNewUser] = useState(''); 
   const [registerMessage, setRegisterMessage] = useState('');
   const [registerError, setRegisterError] = useState('');
 
@@ -24,7 +26,7 @@ function AdminDashboard() {
 
   // ESTADOS para el formulario de registro de pago
   const [selectedUserForPayment, setSelectedUserForPayment] = useState('');
-  const [userPaymentsToRegister, setUserPaymentsToRegister] = useState([]); // Pagos pendientes/parciales del usuario seleccionado
+  const [userPaymentsToRegister, setUserPaymentsToRegister] = useState([]); 
   const [selectedPaymentId, setSelectedPaymentId] = useState('');
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentRef, setPaymentRef] = useState('');
@@ -36,6 +38,9 @@ function AdminDashboard() {
   const [deleteLoanMessage, setDeleteLoanMessage] = useState('');
   const [deleteLoanError, setDeleteLoanError] = useState('');
 
+  // ¡NUEVO ESTADO! Para guardar la lista de cobradores
+  const [cobradoresList, setCobradoresList] = useState([]);
+
 
   // Función para cargar usuarios (se usará en useEffect y al registrar usuario/préstamo/pago)
   const fetchUsers = async () => {
@@ -44,9 +49,8 @@ function AdminDashboard() {
           navigate('/login');
           return;
       }
-      setLoading(true); // Activa estado de carga antes de fetch
+      setLoading(true); 
       try {
-          // ¡NUEVO! Usa la variable de entorno para la URL del backend
           const response = await fetch(import.meta.env.VITE_API_URL + '/api/admin/usuarios', {
               headers: {
                   'Authorization': `Bearer ${token}`
@@ -55,6 +59,8 @@ function AdminDashboard() {
           const data = await response.json();
           if (response.ok) {
               setUsers(data);
+              // ¡AJUSTE CLAVE AQUÍ! Filtra los cobradores de la lista de usuarios
+              setCobradoresList(data.filter(user => user.rol === 'cobrador'));
           } else {
               if (response.status === 401 || response.status === 403) {
                   localStorage.removeItem('token');
@@ -70,7 +76,7 @@ function AdminDashboard() {
               localStorage.removeItem('token');
               navigate('/login');
           }
-      } finally { // ¡NUEVO! Siempre desactiva el estado de carga
+      } finally { 
           setLoading(false); 
       }
   };
@@ -83,7 +89,6 @@ function AdminDashboard() {
     }
     const token = localStorage.getItem('token');
     try {
-        // ¡NUEVO! Usa la variable de entorno para la URL del backend
         const response = await fetch(import.meta.env.VITE_API_URL + `/api/admin/pagos/${userId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -91,7 +96,6 @@ function AdminDashboard() {
         });
         const data = await response.json();
         if (response.ok) {
-            // Filtra solo los pagos que no estén totalmente pagados
             const pendingOrPartial = data.filter(p => 
                 p.estado === 'PENDIENTE' || 
                 p.estado === 'ATRASADO' || 
@@ -116,9 +120,7 @@ function AdminDashboard() {
       navigate('/login');
       return;
     }
-    // setLoading(true); // Se controla desde fetchUsers si se llama primero
     try {
-      // ¡NUEVO! Usa la variable de entorno para la URL del backend
       const response = await fetch(import.meta.env.VITE_API_URL + '/api/admin/prestamos', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -134,18 +136,16 @@ function AdminDashboard() {
       console.error('Error al cargar préstamos:', err);
       setDeleteLoanError('Error de red al cargar préstamos.');
     } finally {
-        setLoading(false); // Desactiva estado de carga al final de la carga de préstamos (última promesa en resolverse)
+        setLoading(false); 
     }
   };
 
 
   // useEffect principal para cargar usuarios y préstamos al inicio
   useEffect(() => {
-    // Se asegura que fetchUsers y fetchLoans se manejen secuencialmente o que setLoading se haga una sola vez
     const loadAllData = async () => {
-        await fetchUsers();
+        await fetchUsers(); 
         await fetchLoans();
-        // setLoading(false) // Se hace en fetchLoans
     };
     loadAllData();
   }, [navigate]);
@@ -157,7 +157,7 @@ function AdminDashboard() {
         fetchUserPaymentsForRegistration(selectedUserForPayment);
     } else {
         setUserPaymentsToRegister([]);
-        setSelectedPaymentId(''); // Limpiar selección de pago
+        setSelectedPaymentId(''); 
     }
   }, [selectedUserForPayment]);
 
@@ -180,7 +180,7 @@ function AdminDashboard() {
     }
 
     try {
-      // ¡NUEVO! Usa la variable de entorno para la URL del backend
+      // ¡AJUSTE CLAVE AQUÍ! Enviar el cobrador_asignado_id si se seleccionó
       const response = await fetch(import.meta.env.VITE_API_URL + '/api/register', {
         method: 'POST',
         headers: {
@@ -190,7 +190,10 @@ function AdminDashboard() {
         body: JSON.stringify({
           nombre_completo: newUserName,
           telefono_whatsapp: newUserPhone,
-          password: newUserPassword
+          password: newUserPassword,
+          // ¡NUEVA PROPIEDAD! Enviamos el rol 'cliente' por defecto, y el cobrador asignado si hay uno
+          rol: 'cliente', // Por defecto, al registrar desde aquí es un cliente
+          cobrador_asignado_id: selectedCobradorForNewUser || null // Envía el ID si hay uno seleccionado
         }),
       });
 
@@ -201,7 +204,8 @@ function AdminDashboard() {
         setNewUserName('');
         setNewUserPhone('');
         setNewUserPassword('');
-        fetchUsers(); // Volver a cargar la lista de usuarios
+        setSelectedCobradorForNewUser(''); // ¡NUEVO! Limpia el selector de cobrador
+        fetchUsers(); // Volver a cargar la lista de usuarios y cobradores
 
         if (selectedUserForPayment) { 
             fetchUserPaymentsForRegistration(selectedUserForPayment);
@@ -216,7 +220,6 @@ function AdminDashboard() {
     } 
   };
 
-  // handleRegisterLoan - ya no envía montoCuotaDiaria
   const handleRegisterLoan = async (e) => {
     e.preventDefault();
     setLoanMessage('');
@@ -236,7 +239,6 @@ function AdminDashboard() {
 
 
     try {
-      // ¡NUEVO! Usa la variable de entorno para la URL del backend
       const response = await fetch(import.meta.env.VITE_API_URL + '/api/admin/prestamos', {
         method: 'POST',
         headers: {
@@ -253,7 +255,6 @@ function AdminDashboard() {
       const data = await response.json();
 
       if (response.ok) {
-        // CORRECCIÓN CLAVE AQUÍ PARA MENSAJE DE ÉXITO: Accediendo a data.prestamo.monto_total_a_pagar
         setLoanMessage(data.message + ` Monto total a pagar: $${Number(data.prestamo.monto_total_a_pagar).toFixed(2)}. Cuota diaria: $${Number(data.prestamo.monto_cuota_diaria).toFixed(2)}`);
         setSelectedUserId('');
         setMontoPrestamo('');
@@ -273,7 +274,6 @@ function AdminDashboard() {
     }
   };
 
-  // FUNCIÓN: Registrar un pago
   const handleRegisterPayment = async (e) => {
     e.preventDefault();
     setPaymentMessage('');
@@ -298,7 +298,6 @@ function AdminDashboard() {
     }
 
     try {
-      // ¡NUEVO! Usa la variable de entorno para la URL del backend
       const response = await fetch(import.meta.env.VITE_API_URL + '/api/admin/pagar', {
         method: 'POST',
         headers: {
@@ -334,7 +333,6 @@ function AdminDashboard() {
     }
   };
 
-  // FUNCIÓN: Eliminar un préstamo
   const handleDeleteLoan = async (loanId) => {
     setDeleteLoanMessage('');
     setDeleteLoanError('');
@@ -348,7 +346,6 @@ function AdminDashboard() {
 
     if (window.confirm('¿Estás seguro de que quieres eliminar este préstamo? Esto borrará todas sus cuotas asociadas y ajustará el saldo del usuario.')) {
         try {
-            // ¡NUEVO! Usa la variable de entorno para la URL del backend
             const response = await fetch(import.meta.env.VITE_API_URL + `/api/admin/prestamos/${loanId}`, {
                 method: 'DELETE',
                 headers: {
@@ -362,7 +359,6 @@ function AdminDashboard() {
                 setDeleteLoanMessage(data.message);
                 fetchUsers(); // Recargar usuarios para actualizar saldos
                 fetchLoans(); // Recargar la lista de préstamos
-                // Recargar cuotas del usuario seleccionado para el pago si es necesario
                 if (selectedUserForPayment) {
                     fetchUserPaymentsForRegistration(selectedUserForPayment);
                 }
@@ -449,6 +445,23 @@ function AdminDashboard() {
                         required
                     />
                 </div>
+                {/* ¡AJUSTE CLAVE AQUÍ! Selector para asignar cobrador */}
+                {cobradoresList.length > 0 && (
+                    <div>
+                        <select
+                            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            value={selectedCobradorForNewUser}
+                            onChange={(e) => setSelectedCobradorForNewUser(e.target.value)}
+                        >
+                            <option value="">-- Asignar Cobrador (Opcional) --</option>
+                            {cobradoresList.map(cobrador => (
+                                <option key={cobrador.id} value={cobrador.id}>
+                                    {cobrador.nombre_completo} ({cobrador.telefono_whatsapp})
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
                 <button
                     type="submit"
                     className="bg-green-600 text-white p-3 rounded-md font-semibold hover:bg-green-700 transition duration-300"
@@ -501,7 +514,6 @@ function AdminDashboard() {
                         required
                     />
                 </div>
-                {/* El campo Monto Cuota Diaria ya no va aquí, se calcula en el backend */}
                 <button
                     type="submit"
                     className="bg-blue-600 text-white p-3 rounded-md font-semibold hover:bg-blue-700 transition duration-300"
@@ -544,7 +556,6 @@ function AdminDashboard() {
                             <option value="">Selecciona una Cuota</option>
                             {userPaymentsToRegister.map(payment => (
                                 <option key={payment.id} value={payment.id}>
-                                    {/* AJUSTE CLAVE AQUÍ: Asegura que monto_cuota y monto_pagado sean números */}
                                     {new Date(payment.fecha_cuota).toLocaleDateString()} - ${Number(payment.monto_cuota || 0).toFixed(2)} ({payment.estado}) - Pagado: ${Number(payment.monto_pagado || 0).toFixed(2)}
                                 </option>
                             ))}
@@ -611,7 +622,6 @@ function AdminDashboard() {
                         <tbody>
                             {loans.map((loan) => (
                                 <tr key={loan.id} className="hover:bg-gray-50">
-                                    {/* CORRECCIÓN CLAVE AQUÍ: Quitando .substring() */}
                                     <td className="py-2 px-4 border-b text-sm">{loan.id}</td>
                                     <td className="py-2 px-4 border-b">{loan.nombre_completo}</td>
                                     <td className="py-2 px-4 border-b">${Number(loan.monto_capital || 0).toFixed(2)}</td>
@@ -647,29 +657,34 @@ function AdminDashboard() {
               <table className="min-w-full bg-white border border-gray-200">
                 <thead>
                   <tr>
-                    <th className="py-2 px-4 border-b text-left text-gray-600">ID Usuario</th> {/* Añadí esta columna para el ID */}
+                    <th className="py-2 px-4 border-b text-left text-gray-600">ID Usuario</th>
                     <th className="py-2 px-4 border-b text-left text-gray-600">Nombre</th>
                     <th className="py-2 px-4 border-b text-left text-gray-600">Teléfono</th>
                     <th className="py-2 px-4 border-b text-left text-gray-600">Saldo Pendiente</th>
                     <th className="py-2 px-4 border-b text-left text-gray-600">Estado</th>
-                    {/* Agrega más columnas si es necesario */}
+                    <th className="py-2 px-4 border-b text-left text-gray-600">Rol</th> {/* ¡NUEVO! */}
+                    <th className="py-2 px-4 border-b text-left text-gray-600">Cobrador Asignado</th> {/* ¡NUEVO! */}
                   </tr>
                 </thead>
                 <tbody>
                   {users.map((user) => (
                     <tr key={user.id} className="hover:bg-gray-50">
-                      {/* CORRECCIÓN CLAVE AQUÍ: Quitando .substring() */}
                       <td className="py-2 px-4 border-b">{user.id}</td>
                       <td className="py-2 px-4 border-b">{user.nombre_completo}</td>
                       <td className="py-2 px-4 border-b">{user.telefono_whatsapp}</td>
-                      {/* Modificación clave aquí para manejar saldo_pendiente_total */}
                       <td className="py-2 px-4 border-b">${Number(user.saldo_pendiente_total || 0).toFixed(2)}</td>
                       <td className="py-2 px-4 border-b">
                         <span className={`font-semibold ${user.activo ? 'text-green-600' : 'text-red-600'}`}>
                           {user.activo ? 'Activo' : 'Inactivo'}
                         </span>
                       </td>
-                      {/* Agrega más celdas para acciones (editar, ver pagos, etc.) */}
+                      <td className="py-2 px-4 border-b">{user.rol}</td> {/* ¡NUEVO! */}
+                      {/* ¡AJUSTE CLAVE AQUÍ! Mostrar nombre del cobrador en lugar de solo ID */}
+                      <td className="py-2 px-4 border-b">
+                        {user.cobrador_asignado_id 
+                            ? (cobradoresList.find(c => c.id === user.cobrador_asignado_id)?.nombre_completo || user.cobrador_asignado_id) 
+                            : 'N/A'}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
