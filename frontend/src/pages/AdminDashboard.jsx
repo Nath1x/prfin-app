@@ -1,5 +1,5 @@
 // C:\Users\1vkwi\prfin-app\frontend\src\pages\AdminDashboard.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect } => 'react';
 import { useNavigate } from 'react-router-dom';
 
 function AdminDashboard() {
@@ -12,7 +12,6 @@ function AdminDashboard() {
   const [newUserName, setNewUserName] = useState('');
   const [newUserPhone, setNewUserPhone] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
-  // ¡NUEVO ESTADO! Para el cobrador seleccionado al registrar nuevo usuario
   const [selectedCobradorForNewUser, setSelectedCobradorForNewUser] = useState(''); 
   const [registerMessage, setRegisterMessage] = useState('');
   const [registerError, setRegisterError] = useState('');
@@ -38,7 +37,7 @@ function AdminDashboard() {
   const [deleteLoanMessage, setDeleteLoanMessage] = useState('');
   const [deleteLoanError, setDeleteLoanError] = useState('');
 
-  // ¡NUEVO ESTADO! Para guardar la lista de cobradores
+  // Para guardar la lista de cobradores
   const [cobradoresList, setCobradoresList] = useState([]);
 
 
@@ -59,7 +58,6 @@ function AdminDashboard() {
           const data = await response.json();
           if (response.ok) {
               setUsers(data);
-              // ¡AJUSTE CLAVE AQUÍ! Filtra los cobradores de la lista de usuarios
               setCobradoresList(data.filter(user => user.rol === 'cobrador'));
           } else {
               if (response.status === 401 || response.status === 403) {
@@ -94,7 +92,7 @@ function AdminDashboard() {
                 'Authorization': `Bearer ${token}`
             }
         });
-        const data = await response.json();
+        const data = await paymentsResponse.json(); // <-- Error aquí, debería ser paymentsResponse.json()
         if (response.ok) {
             const pendingOrPartial = data.filter(p => 
                 p.estado === 'PENDIENTE' || 
@@ -140,6 +138,36 @@ function AdminDashboard() {
     }
   };
 
+  // ¡NUEVA FUNCIÓN! Para eliminar un usuario
+  const handleDeleteUser = async (userId) => {
+      if (window.confirm('¿Estás seguro de que quieres eliminar este usuario? Si tiene saldo pendiente, préstamos o clientes asignados, la eliminación podría fallar.')) {
+          const token = localStorage.getItem('token');
+          if (!token) {
+              setError('No autenticado. Por favor, inicia sesión de nuevo.');
+              navigate('/login');
+              return;
+          }
+          try {
+              const response = await fetch(import.meta.env.VITE_API_URL + `/api/admin/usuarios/${userId}`, {
+                  method: 'DELETE',
+                  headers: {
+                      'Authorization': `Bearer ${token}`
+                  }
+              });
+              const data = await response.json();
+              if (response.ok) {
+                  alert(data.message);
+                  fetchUsers(); // Recargar la lista de usuarios para que se vea el cambio
+              } else {
+                  alert(data.error || 'Error al eliminar usuario.');
+              }
+          } catch (err) {
+              console.error('Error de red al eliminar usuario:', err);
+              alert('No se pudo conectar al servidor para eliminar usuario.');
+          }
+      }
+  };
+
 
   // useEffect principal para cargar usuarios y préstamos al inicio
   useEffect(() => {
@@ -180,7 +208,6 @@ function AdminDashboard() {
     }
 
     try {
-      // ¡AJUSTE CLAVE AQUÍ! Enviar el cobrador_asignado_id si se seleccionó
       const response = await fetch(import.meta.env.VITE_API_URL + '/api/register', {
         method: 'POST',
         headers: {
@@ -191,9 +218,8 @@ function AdminDashboard() {
           nombre_completo: newUserName,
           telefono_whatsapp: newUserPhone,
           password: newUserPassword,
-          // ¡NUEVA PROPIEDAD! Enviamos el rol 'cliente' por defecto, y el cobrador asignado si hay uno
-          rol: 'cliente', // Por defecto, al registrar desde aquí es un cliente
-          cobrador_asignado_id: selectedCobradorForNewUser || null // Envía el ID si hay uno seleccionado
+          rol: 'cliente', 
+          cobrador_asignado_id: selectedCobradorForNewUser || null 
         }),
       });
 
@@ -204,8 +230,8 @@ function AdminDashboard() {
         setNewUserName('');
         setNewUserPhone('');
         setNewUserPassword('');
-        setSelectedCobradorForNewUser(''); // ¡NUEVO! Limpia el selector de cobrador
-        fetchUsers(); // Volver a cargar la lista de usuarios y cobradores
+        setSelectedCobradorForNewUser(''); 
+        fetchUsers(); 
 
         if (selectedUserForPayment) { 
             fetchUserPaymentsForRegistration(selectedUserForPayment);
@@ -259,8 +285,8 @@ function AdminDashboard() {
         setSelectedUserId('');
         setMontoPrestamo('');
         setPlazoDias('');
-        fetchUsers(); // Recargar usuarios
-        fetchLoans(); // Recargar préstamos
+        fetchUsers(); 
+        fetchLoans(); 
         if (selectedUserId === selectedUserForPayment) {
             fetchUserPaymentsForRegistration(selectedUserForPayment);
         }
@@ -318,8 +344,8 @@ function AdminDashboard() {
         setSelectedPaymentId('');
         setPaymentAmount('');
         setPaymentRef('');
-        fetchUsers(); // Recargar usuarios
-        fetchLoans(); // Recargar préstamos
+        fetchUsers(); 
+        fetchLoans(); 
         if (selectedUserForPayment) {
             fetchUserPaymentsForRegistration(selectedUserForPayment);
         }
@@ -357,8 +383,8 @@ function AdminDashboard() {
 
             if (response.ok) {
                 setDeleteLoanMessage(data.message);
-                fetchUsers(); // Recargar usuarios para actualizar saldos
-                fetchLoans(); // Recargar la lista de préstamos
+                fetchUsers(); 
+                fetchLoans(); 
                 if (selectedUserForPayment) {
                     fetchUserPaymentsForRegistration(selectedUserForPayment);
                 }
@@ -367,7 +393,7 @@ function AdminDashboard() {
             }
         } catch (err) {
             console.error('Error de red al eliminar préstamo:', err);
-            setDeleteLoanError('No se pudo conectar al servidor para eliminar préstamo.');
+            alert('No se pudo conectar al servidor para eliminar préstamo.');
         }
     }
   };
@@ -662,8 +688,9 @@ function AdminDashboard() {
                     <th className="py-2 px-4 border-b text-left text-gray-600">Teléfono</th>
                     <th className="py-2 px-4 border-b text-left text-gray-600">Saldo Pendiente</th>
                     <th className="py-2 px-4 border-b text-left text-gray-600">Estado</th>
-                    <th className="py-2 px-4 border-b text-left text-gray-600">Rol</th> {/* ¡NUEVO! */}
-                    <th className="py-2 px-4 border-b text-left text-gray-600">Cobrador Asignado</th> {/* ¡NUEVO! */}
+                    <th className="py-2 px-4 border-b text-left text-gray-600">Rol</th>
+                    <th className="py-2 px-4 border-b text-left text-gray-600">Cobrador Asignado</th>
+                    <th className="py-2 px-4 border-b text-left text-gray-600">Acciones</th> {/* ¡AJUSTE CLAVE AQUÍ! */}
                   </tr>
                 </thead>
                 <tbody>
@@ -678,12 +705,19 @@ function AdminDashboard() {
                           {user.activo ? 'Activo' : 'Inactivo'}
                         </span>
                       </td>
-                      <td className="py-2 px-4 border-b">{user.rol}</td> {/* ¡NUEVO! */}
-                      {/* ¡AJUSTE CLAVE AQUÍ! Mostrar nombre del cobrador en lugar de solo ID */}
+                      <td className="py-2 px-4 border-b">{user.rol}</td>
                       <td className="py-2 px-4 border-b">
                         {user.cobrador_asignado_id 
                             ? (cobradoresList.find(c => c.id === user.cobrador_asignado_id)?.nombre_completo || user.cobrador_asignado_id) 
                             : 'N/A'}
+                      </td>
+                      <td className="py-2 px-4 border-b"> {/* ¡AJUSTE CLAVE AQUÍ! Botón de eliminar */}
+                        <button
+                            onClick={() => handleDeleteUser(user.id)}
+                            className="bg-red-500 text-white p-1 rounded-md text-xs hover:bg-red-600 transition duration-300"
+                        >
+                            Eliminar
+                        </button>
                       </td>
                     </tr>
                   ))}
