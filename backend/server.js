@@ -111,7 +111,7 @@ app.get('/test-db', async (req, res) => {
 });
 
 // ¡CORRECCIÓN CLAVE AQUÍ! Ruta de prueba para WhatsApp que usamos para depurar
-app.post('/api/test-whatsapp', authenticateToken, async (req, res) => {
+app.post('/api/test-whatsapp', authenticateToken(), async (req, res) => { // authenticateToken()
     const { to, messageBody } = req.body;
     if (!to || !messageBody) {
         return res.status(400).json({ error: 'Número de destino y cuerpo del mensaje son obligatorios.' });
@@ -127,17 +127,32 @@ app.post('/api/test-whatsapp', authenticateToken, async (req, res) => {
 
 // --- RUTAS DE AUTENTICACIÓN Y USUARIOS ---
 
-app.post('/api/register', async (req, res) => {
-    const { nombre_completo, telefono_whatsapp, password } = req.body;
+app.post('/api/register', authenticateToken('admin'), async (req, res) => { // ¡CORRECCIÓN CLAVE AQUÍ! authenticateToken('admin')
+    const { nombre_completo, telefono_whatsapp, password, rol, cobrador_asignado_id } = req.body;
     if (!nombre_completo || !telefono_whatsapp || !password) {
-        return res.status(400).json({ error: 'Todos los campos son obligatorios.' });
+        return res.status(400).json({ error: 'Nombre, teléfono y contraseña son obligatorios.' });
     }
+
     try {
         const salt = await bcrypt.genSalt(10);
         const password_hash = await bcrypt.hash(password, salt);
+
+        // Determina el rol a asignar (solo 'admin' puede asignar 'admin' o 'cobrador', si no, es 'cliente')
+        let finalRole = 'cliente';
+        if (req.user.rol === 'admin' && (rol === 'admin' || rol === 'cobrador')) {
+            finalRole = rol;
+        }
+
+        // Asigna cobrador_asignado_id si el rol es 'admin' y se proporciona un ID válido
+        let finalCobradorAsignadoId = null;
+        if (req.user.rol === 'admin' && cobrador_asignado_id) {
+            // Opcional: Podrías verificar que cobrador_asignado_id realmente existe y tiene rol 'cobrador'
+            finalCobradorAsignadoId = cobrador_asignado_id;
+        }
+
         const result = await pool.query(
-            'INSERT INTO usuarios (nombre_completo, telefono_whatsapp, password_hash) VALUES ($1, $2, $3) RETURNING id, nombre_completo, telefono_whatsapp',
-            [nombre_completo, telefono_whatsapp, password_hash]
+            'INSERT INTO usuarios (nombre_completo, telefono_whatsapp, password_hash, rol, cobrador_asignado_id) VALUES ($1, $2, $3, $4, $5) RETURNING id, nombre_completo, telefono_whatsapp, rol',
+            [nombre_completo, telefono_whatsapp, password_hash, finalRole, finalCobradorAsignadoId]
         );
         res.status(201).json({ message: 'Usuario registrado exitosamente', user: result.rows[0] });
     } catch (error) {
@@ -156,7 +171,7 @@ app.post('/api/login', async (req, res) => {
     }
     try {
         const result = await pool.query(
-            'SELECT id, nombre_completo, telefono_whatsapp, password_hash FROM usuarios WHERE telefono_whatsapp = $1',
+            'SELECT id, nombre_completo, telefono_whatsapp, password_hash, rol FROM usuarios WHERE telefono_whatsapp = $1', // ¡CORRECCIÓN CLAVE AQUÍ! Añadir 'rol' al SELECT
             [telefono_whatsapp]
         );
         const user = result.rows[0];
@@ -168,7 +183,7 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ error: 'Credenciales inválidas.' });
         }
         const token = jwt.sign(
-            { id: user.id, telefono_whatsapp: user.telefono_whatsapp, nombre_completo: user.nombre_completo },
+            { id: user.id, telefono_whatsapp: user.telefono_whatsapp, nombre_completo: user.nombre_completo, rol: user.rol }, // ¡CORRECCIÓN CLAVE AQUÍ! Añadir 'rol' al token
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );
@@ -179,10 +194,10 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-app.get('/api/me', authenticateToken(), async (req, res) => { // ¡CORRECCIÓN CLAVE AQUÍ! authenticateToken() ahora es una función
+app.get('/api/me', authenticateToken(), async (req, res) => { // authenticateToken()
     try {
         const result = await pool.query(
-            'SELECT id, nombre_completo, telefono_whatsapp, saldo_pendiente_total, activo FROM usuarios WHERE id = $1',
+            'SELECT id, nombre_completo, telefono_whatsapp, saldo_pendiente_total, activo, rol FROM usuarios WHERE id = $1', // ¡CORRECCIÓN CLAVE AQUÍ! Añadir 'rol' al SELECT
             [req.user.id]
         );
         const user = result.rows[0];
@@ -196,7 +211,7 @@ app.get('/api/me', authenticateToken(), async (req, res) => { // ¡CORRECCIÓN C
     }
 });
 
-app.get('/api/me/pagos', authenticateToken(), async (req, res) => { // ¡CORRECCIÓN CLAVE AQUÍ! authenticateToken()
+app.get('/api/me/pagos', authenticateToken(), async (req, res) => { // authenticateToken()
     try {
         const result = await pool.query(
             'SELECT id, fecha_cuota, monto_cuota, monto_pagado, fecha_pago, estado, referencia_pago, observaciones FROM pagos WHERE usuario_id = $1 ORDER BY fecha_cuota DESC',
@@ -209,9 +224,47 @@ app.get('/api/me/pagos', authenticateToken(), async (req, res) => { // ¡CORRECC
     }
 });
 
+// ¡CORRECCIÓN CLAVE AQUÍ! --- RUTAS PARA COBRADORES ---
+// Ruta para que el cobrador vea sus clientes asignados
+app.get('/api/cobrador/mis-clientes', authenticateToken('cobrador'), async (req, res) => {
+    try {
+        const cobradorId = req.user.id; // ID del cobrador autenticado
+        const result = await pool.query(
+            'SELECT id, nombre_completo, telefono_whatsapp, saldo_pendiente_total, activo FROM usuarios WHERE cobrador_asignado_id = $1 ORDER BY nombre_completo',
+            [cobradorId]
+        );
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error al obtener clientes asignados para cobrador:', error);
+        res.status(500).json({ error: 'Error interno del servidor al obtener clientes asignados', details: error.message });
+    }
+});
+
+// Ruta para que el cobrador vea los pagos pendientes de sus clientes asignados
+app.get('/api/cobrador/mis-pagos-pendientes', authenticateToken('cobrador'), async (req, res) => {
+    try {
+        const cobradorId = req.user.id;
+        const result = await pool.query(
+            `SELECT 
+                p.id, p.usuario_id, p.prestamo_id, p.fecha_cuota, p.monto_cuota, p.monto_pagado, p.estado,
+                u.nombre_completo as cliente_nombre, u.telefono_whatsapp as cliente_telefono
+            FROM pagos p
+            JOIN usuarios u ON p.usuario_id = u.id
+            WHERE u.cobrador_asignado_id = $1 AND p.estado IN ('PENDIENTE', 'PARCIAL')
+            ORDER BY p.fecha_cuota ASC`,
+            [cobradorId]
+        );
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error al obtener pagos pendientes para cobrador:', error);
+        res.status(500).json({ error: 'Error interno del servidor al obtener pagos pendientes', details: error.message });
+    }
+});
+
+
 // --- GESTIÓN DE PAGOS (API para el panel de administración) ---
 
-app.post('/api/admin/prestamos', authenticateToken('admin'), async (req, res) => { // ¡CORRECCIÓN CLAVE AQUÍ! authenticateToken('admin')
+app.post('/api/admin/prestamos', authenticateToken('admin'), async (req, res) => { // authenticateToken('admin')
     const { usuario_id, monto_prestamo, plazo_dias } = req.body;
     if (!usuario_id || !monto_prestamo || !plazo_dias) {
         return res.status(400).json({ error: 'Usuario, monto del préstamo y plazo en días son obligatorios.' });
@@ -267,7 +320,7 @@ app.post('/api/admin/prestamos', authenticateToken('admin'), async (req, res) =>
     }
 });
 
-app.delete('/api/admin/prestamos/:id', authenticateToken('admin'), async (req, res) => { // ¡CORRECCIÓN CLAVE AQUÍ! authenticateToken('admin')
+app.delete('/api/admin/prestamos/:id', authenticateToken('admin'), async (req, res) => { // authenticateToken('admin')
     const { id } = req.params;
     const client = await pool.connect();
     try {
@@ -312,7 +365,7 @@ app.delete('/api/admin/prestamos/:id', authenticateToken('admin'), async (req, r
 // ##########################################################################
 // ## RUTA MODIFICADA PARA ENVIAR WHATSAPP TRAS UN PAGO ##
 // ##########################################################################
-app.post('/api/admin/pagar', authenticateToken('admin'), async (req, res) => { // ¡CORRECCIÓN CLAVE AQUÍ! authenticateToken('admin')
+app.post('/api/admin/pagar', authenticateToken('admin'), async (req, res) => { // authenticateToken('admin')
     const { pago_id, monto_pagado, referencia_pago } = req.body;
 
     if (!pago_id || !monto_pagado) {
@@ -395,7 +448,7 @@ app.post('/api/admin/pagar', authenticateToken('admin'), async (req, res) => { /
 
 
 // Obtener todos los usuarios (para el admin)
-app.get('/api/admin/usuarios', authenticateToken('admin'), async (req, res) => { // ¡CORRECCIÓN CLAVE AQUÍ! authenticateToken('admin')
+app.get('/api/admin/usuarios', authenticateToken('admin'), async (req, res) => { // authenticateToken('admin')
     try {
         const result = await pool.query('SELECT id, nombre_completo, telefono_whatsapp, saldo_pendiente_total, activo, fecha_creacion FROM usuarios ORDER BY fecha_creacion DESC');
         res.json(result.rows);
@@ -406,7 +459,7 @@ app.get('/api/admin/usuarios', authenticateToken('admin'), async (req, res) => {
 });
 
 // Obtener pagos de un usuario específico (para el admin)
-app.get('/api/admin/pagos/:userId', authenticateToken('admin'), async (req, res) => { // ¡CORRECCIÓN CLAVE AQUÍ! authenticateToken('admin')
+app.get('/api/admin/pagos/:userId', authenticateToken('admin'), async (req, res) => { // authenticateToken('admin')
     const { userId } = req.params;
     try {
         const result = await pool.query(
@@ -421,7 +474,7 @@ app.get('/api/admin/pagos/:userId', authenticateToken('admin'), async (req, res)
 });
 
 // Obtener todos los préstamos (para el admin)
-app.get('/api/admin/prestamos', authenticateToken('admin'), async (req, res) => { // ¡CORRECCIÓN CLAVE AQUÍ! authenticateToken('admin')
+app.get('/api/admin/prestamos', authenticateToken('admin'), async (req, res) => { // authenticateToken('admin')
     try {
         const result = await pool.query(
             'SELECT p.*, u.nombre_completo, u.telefono_whatsapp FROM prestamos p JOIN usuarios u ON p.usuario_id = u.id ORDER BY p.fecha_creacion DESC'
