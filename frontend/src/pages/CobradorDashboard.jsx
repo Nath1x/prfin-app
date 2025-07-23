@@ -9,67 +9,116 @@ function CobradorDashboard() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
+  // ¡NUEVO ESTADO! Para el cliente seleccionado en el dropdown
+  const [selectedClientId, setSelectedClientId] = useState(''); 
+  // ¡NUEVO ESTADO! Para el nombre del cliente seleccionado, para mostrarlo en el título de la tabla de pagos
+  const [selectedClientName, setSelectedClientName] = useState('');
 
-      try {
-        // Fetch para obtener clientes asignados
-        const clientsResponse = await fetch(import.meta.env.VITE_API_URL + '/api/cobrador/mis-clientes', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        const clientsData = await clientsResponse.json();
+  // Función para cargar los datos iniciales (solo clientes asignados)
+  const fetchInitialData = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
 
-        if (clientsResponse.ok) {
-          setAssignedClients(clientsData);
-        } else {
-          if (clientsResponse.status === 401 || clientsResponse.status === 403) {
-            localStorage.removeItem('token');
-            navigate('/login');
-            return;
-          }
-          throw new Error(clientsData.error || 'Error al cargar clientes asignados.');
+    try {
+      // Fetch para obtener clientes asignados (esto se mantiene igual)
+      const clientsResponse = await fetch(import.meta.env.VITE_API_URL + '/api/cobrador/mis-clientes', {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
+      });
+      const clientsData = await clientsResponse.json();
 
-        // Fetch para obtener pagos pendientes de esos clientes
-        const paymentsResponse = await fetch(import.meta.env.VITE_API_URL + '/api/cobrador/mis-pagos-pendientes', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        const paymentsData = await paymentsResponse.json();
-
-        if (paymentsResponse.ok) {
-          setPendingPayments(paymentsData);
-        } else {
-          if (paymentsResponse.status === 401 || paymentsResponse.status === 403) {
-            localStorage.removeItem('token');
-            navigate('/login');
-            return;
-          }
-          throw new Error(paymentsData.error || 'Error al cargar pagos pendientes.');
-        }
-
-      } catch (err) {
-        console.error('Error al cargar dashboard de cobrador:', err);
-        setError(err.message || 'Error desconocido al cargar datos.');
-        if (err.message.includes('Unauthorized') || err.message.includes('Forbidden')) {
+      if (clientsResponse.ok) {
+        setAssignedClients(clientsData);
+      } else {
+        if (clientsResponse.status === 401 || clientsResponse.status === 403) {
           localStorage.removeItem('token');
           navigate('/login');
+          return;
         }
-      } finally {
-        setLoading(false);
+        throw new Error(clientsData.error || 'Error al cargar clientes asignados.');
       }
-    };
 
-    fetchData();
+    } catch (err) {
+      console.error('Error al cargar datos iniciales del cobrador:', err);
+      setError(err.message || 'Error desconocido al cargar datos iniciales.');
+      if (err.message.includes('Unauthorized') || err.message.includes('Forbidden')) {
+        localStorage.removeItem('token');
+        navigate('/login');
+      }
+    } finally {
+      setLoading(false); // Desactiva la carga después de la carga inicial de clientes
+    }
+  };
+
+  // ¡NUEVA FUNCIÓN! Para cargar pagos de un cliente específico
+  const fetchClientPayments = async (clientId) => {
+    if (!clientId) { // Si no hay cliente seleccionado, no cargues nada
+      setPendingPayments([]);
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    setError(''); // Limpia errores anteriores antes de un nuevo fetch
+    // setLoading(true); // Podrías activar un loader específico para los pagos si quieres
+
+    try {
+      // Fetch para obtener pagos pendientes del cliente seleccionado
+      // ¡AJUSTE CLAVE AQUÍ! Ahora busca pagos por el clientId
+      const paymentsResponse = await fetch(import.meta.env.VITE_API_URL + `/api/cobrador/mis-pagos-pendientes?clientId=${clientId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const paymentsData = await paymentsResponse.json();
+
+      if (paymentsResponse.ok) {
+        setPendingPayments(paymentsData);
+      } else {
+        if (paymentsResponse.status === 401 || paymentsResponse.status === 403) {
+          localStorage.removeItem('token');
+          navigate('/login');
+          return;
+        }
+        throw new Error(paymentsData.error || 'Error al cargar pagos pendientes del cliente.');
+      }
+    } catch (err) {
+      console.error('Error al cargar pagos del cliente:', err);
+      setError(err.message || 'Error desconocido al cargar pagos del cliente.');
+      if (err.message.includes('Unauthorized') || err.message.includes('Forbidden')) {
+        localStorage.removeItem('token');
+        navigate('/login');
+      }
+    } 
+    // finally {
+    //   setLoading(false); // Si usaste un loader específico para pagos, desactívalo aquí
+    // }
+  };
+
+  // useEffect inicial para cargar SOLO los clientes asignados al inicio
+  useEffect(() => {
+    fetchInitialData();
   }, [navigate]);
+
+  // ¡NUEVO useEffect! Para cargar pagos cuando se selecciona un cliente
+  useEffect(() => {
+    if (selectedClientId) {
+      const client = assignedClients.find(c => String(c.id) === String(selectedClientId));
+      setSelectedClientName(client ? client.nombre_completo : '');
+      fetchClientPayments(selectedClientId);
+    } else {
+      setPendingPayments([]); // Si no hay cliente seleccionado, limpia los pagos
+      setSelectedClientName('');
+    }
+  }, [selectedClientId, assignedClients]); // Depende de selectedClientId y assignedClients para buscar el nombre
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -114,82 +163,71 @@ function CobradorDashboard() {
       </header>
 
       <main className="container mx-auto">
-        {/* Sección de Clientes Asignados */}
+        {/* Sección de Clientes Asignados - Ahora con un Selector */}
         <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Mis Clientes Asignados</h2>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Seleccionar Cliente</h2>
           {assignedClients.length === 0 ? (
             <p className="text-gray-500 text-center">No tienes clientes asignados aún.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-white border border-gray-200">
-                <thead>
-                  <tr>
-                    <th className="py-2 px-4 border-b text-left text-gray-600">Nombre</th>
-                    <th className="py-2 px-4 border-b text-left text-gray-600">Teléfono</th>
-                    <th className="py-2 px-4 border-b text-left text-gray-600">Saldo Pendiente</th>
-                    <th className="py-2 px-4 border-b text-left text-gray-600">Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {assignedClients.map((client) => (
-                    <tr key={client.id} className="hover:bg-gray-50">
-                      <td className="py-2 px-4 border-b">{client.nombre_completo}</td>
-                      <td className="py-2 px-4 border-b">{client.telefono_whatsapp}</td>
-                      <td className="py-2 px-4 border-b">${Number(client.saldo_pendiente_total || 0).toFixed(2)}</td>
-                      <td className="py-2 px-4 border-b">
-                        <span className={`font-semibold ${client.activo ? 'text-green-600' : 'text-red-600'}`}>
-                          {client.activo ? 'Activo' : 'Inactivo'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-4">
+              <select
+                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={selectedClientId}
+                onChange={(e) => setSelectedClientId(e.target.value)}
+              >
+                <option value="">-- Selecciona un cliente --</option>
+                {assignedClients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.nombre_completo} ({client.telefono_whatsapp}) - Saldo: ${Number(client.saldo_pendiente_total || 0).toFixed(2)}
+                  </option>
+                ))}
+              </select>
             </div>
           )}
         </div>
 
-        {/* Sección de Pagos Pendientes de Mis Clientes */}
-        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Pagos Pendientes de Mis Clientes</h2>
-          {pendingPayments.length === 0 ? (
-            <p className="text-gray-500 text-center">No hay pagos pendientes para tus clientes.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-white border border-gray-200">
-                <thead>
-                  <tr>
-                    <th className="py-2 px-4 border-b text-left text-gray-600">Cliente</th>
-                    <th className="py-2 px-4 border-b text-left text-gray-600">Teléfono Cliente</th>
-                    <th className="py-2 px-4 border-b text-left text-gray-600">Fecha Cuota</th>
-                    <th className="py-2 px-4 border-b text-left text-gray-600">Monto Cuota</th>
-                    <th className="py-2 px-4 border-b text-left text-gray-600">Monto Pagado</th>
-                    <th className="py-2 px-4 border-b text-left text-gray-600">Estado</th>
-                    {/* Puedes añadir una columna para "Registrar Pago" aquí */}
-                  </tr>
-                </thead>
-                <tbody>
-                  {pendingPayments.map((payment) => (
-                    <tr key={payment.id} className="hover:bg-gray-50">
-                      <td className="py-2 px-4 border-b">{payment.cliente_nombre}</td>
-                      <td className="py-2 px-4 border-b">{payment.cliente_telefono}</td>
-                      <td className="py-2 px-4 border-b">{new Date(payment.fecha_cuota).toLocaleDateString()}</td>
-                      <td className="py-2 px-4 border-b">${Number(payment.monto_cuota || 0).toFixed(2)}</td>
-                      <td className="py-2 px-4 border-b">${Number(payment.monto_pagado || 0).toFixed(2)}</td>
-                      <td className={`py-2 px-4 border-b font-semibold ${
-                        payment.estado === 'PAGADO' ? 'text-green-600' :
-                        payment.estado === 'PENDIENTE' ? 'text-yellow-600' :
-                        'text-red-600'
-                      }`}>
-                        {payment.estado}
-                      </td>
+        {/* Sección de Pagos Pendientes - ¡AJUSTE CLAVE AQUÍ! Se muestra solo si hay cliente seleccionado */}
+        {selectedClientId && (
+          <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Pagos Pendientes de {selectedClientName}</h2>
+            {pendingPayments.length === 0 ? (
+              <p className="text-gray-500 text-center">No hay pagos pendientes para este cliente.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full bg-white border border-gray-200">
+                  <thead>
+                    <tr>
+                      {/* Columna de Cliente y Teléfono Cliente ya no son necesarias aquí porque ya se seleccionó */}
+                      <th className="py-2 px-4 border-b text-left text-gray-600">ID Pago</th>
+                      <th className="py-2 px-4 border-b text-left text-gray-600">Fecha Cuota</th>
+                      <th className="py-2 px-4 border-b text-left text-gray-600">Monto Cuota</th>
+                      <th className="py-2 px-4 border-b text-left text-gray-600">Monto Pagado</th>
+                      <th className="py-2 px-4 border-b text-left text-gray-600">Estado</th>
+                      {/* Puedes añadir una columna para "Registrar Pago" aquí */}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                  </thead>
+                  <tbody>
+                    {pendingPayments.map((payment) => (
+                      <tr key={payment.id} className="hover:bg-gray-50">
+                        <td className="py-2 px-4 border-b text-sm">{payment.id}</td>
+                        <td className="py-2 px-4 border-b">{new Date(payment.fecha_cuota).toLocaleDateString()}</td>
+                        <td className="py-2 px-4 border-b">${Number(payment.monto_cuota || 0).toFixed(2)}</td>
+                        <td className="py-2 px-4 border-b">${Number(payment.monto_pagado || 0).toFixed(2)}</td>
+                        <td className={`py-2 px-4 border-b font-semibold ${
+                          payment.estado === 'PAGADO' ? 'text-green-600' :
+                          payment.estado === 'PENDIENTE' ? 'text-yellow-600' :
+                          'text-red-600'
+                        }`}>
+                          {payment.estado}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
       </main>
     </div>
   );
