@@ -9,10 +9,15 @@ function CobradorDashboard() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // ¡NUEVO ESTADO! Para el cliente seleccionado en el dropdown
   const [selectedClientId, setSelectedClientId] = useState(''); 
-  // ¡NUEVO ESTADO! Para el nombre del cliente seleccionado, para mostrarlo en el título de la tabla de pagos
   const [selectedClientName, setSelectedClientName] = useState('');
+
+  // ¡NUEVOS ESTADOS! Para el formulario de registro de pago del cobrador
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentRef, setPaymentRef] = useState('');
+  const [paymentMessage, setPaymentMessage] = useState('');
+  const [paymentError, setPaymentError] = useState('');
+
 
   // Función para cargar los datos iniciales (solo clientes asignados)
   const fetchInitialData = async () => {
@@ -23,7 +28,6 @@ function CobradorDashboard() {
     }
 
     try {
-      // Fetch para obtener clientes asignados (esto se mantiene igual)
       const clientsResponse = await fetch(import.meta.env.VITE_API_URL + '/api/cobrador/mis-clientes', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -50,13 +54,13 @@ function CobradorDashboard() {
         navigate('/login');
       }
     } finally {
-      setLoading(false); // Desactiva la carga después de la carga inicial de clientes
+      setLoading(false); 
     }
   };
 
-  // ¡NUEVA FUNCIÓN! Para cargar pagos de un cliente específico
+  // Función para cargar pagos de un cliente específico
   const fetchClientPayments = async (clientId) => {
-    if (!clientId) { // Si no hay cliente seleccionado, no cargues nada
+    if (!clientId) {
       setPendingPayments([]);
       return;
     }
@@ -67,11 +71,9 @@ function CobradorDashboard() {
       return;
     }
 
-    setError(''); // Limpia errores anteriores antes de un nuevo fetch
-    // setLoading(true); // Podrías activar un loader específico para los pagos si quieres
+    setError(''); 
 
     try {
-      // Fetch para obtener pagos pendientes del cliente seleccionado
       // ¡AJUSTE CLAVE AQUÍ! Ahora busca pagos por el clientId
       const paymentsResponse = await fetch(import.meta.env.VITE_API_URL + `/api/cobrador/mis-pagos-pendientes?clientId=${clientId}`, {
         headers: {
@@ -98,17 +100,72 @@ function CobradorDashboard() {
         navigate('/login');
       }
     } 
-    // finally {
-    //   setLoading(false); // Si usaste un loader específico para pagos, desactívalo aquí
-    // }
   };
+
+  // ¡NUEVA FUNCIÓN! Para registrar un pago desde el cobrador
+  const handleRegisterPayment = async (paymentId, currentMontoCuota, currentMontoPagado) => {
+    // Limpia mensajes anteriores
+    setPaymentMessage(''); 
+    setPaymentError('');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setPaymentError('No autenticado. Por favor, inicia sesión de nuevo.');
+      navigate('/login');
+      return;
+    }
+
+    // Validación básica, el cobrador solo paga la cuota pendiente.
+    // Podríamos pedir un input de monto, pero para simplicidad, asumimos que paga lo que falta.
+    const montoAPagar = Number(currentMontoCuota) - Number(currentMontoPagado);
+    if (montoAPagar <= 0) {
+      setPaymentError('Esta cuota ya está pagada.');
+      return;
+    }
+
+    if (!window.confirm(`¿Confirmas el pago de $${montoAPagar.toFixed(2)} para esta cuota?`)) {
+      return; // Si el cobrador cancela, no hacemos nada
+    }
+
+    try {
+      // Reutilizamos la ruta de pago del admin, pero la protegeremos con rol 'cobrador' en el backend
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/admin/pagar', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          pago_id: paymentId,
+          monto_pagado: montoAPagar, // Asumimos que paga el monto restante
+          referencia_pago: 'Pago Cobrador' // Puedes añadir un input para esto si quieres
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setPaymentMessage('Pago registrado exitosamente.');
+        // Recargar solo los pagos del cliente seleccionado para que la lista se actualice
+        fetchClientPayments(selectedClientId); 
+        // También actualiza el saldo del cliente en la lista de clientes
+        fetchInitialData(); // Para recargar la lista de clientes y sus saldos
+      } else {
+        setPaymentError(data.error || 'Error al registrar pago.');
+      }
+    } catch (err) {
+      console.error('Error de red al registrar pago:', err);
+      setPaymentError('No se pudo conectar al servidor para registrar pago.');
+    }
+  };
+
 
   // useEffect inicial para cargar SOLO los clientes asignados al inicio
   useEffect(() => {
     fetchInitialData();
   }, [navigate]);
 
-  // ¡NUEVO useEffect! Para cargar pagos cuando se selecciona un cliente
+  // NUEVO useEffect! Para cargar pagos cuando se selecciona un cliente
   useEffect(() => {
     if (selectedClientId) {
       const client = assignedClients.find(c => String(c.id) === String(selectedClientId));
@@ -186,7 +243,12 @@ function CobradorDashboard() {
           )}
         </div>
 
-        {/* Sección de Pagos Pendientes - ¡AJUSTE CLAVE AQUÍ! Se muestra solo si hay cliente seleccionado */}
+        {/* Mensajes de resultado del pago */}
+        {paymentMessage && <p className="mt-4 text-green-600 font-semibold text-center">{paymentMessage}</p>}
+        {paymentError && <p className="mt-4 text-red-600 font-semibold text-center">{paymentError}</p>}
+
+
+        {/* Sección de Pagos Pendientes - Se muestra solo si hay cliente seleccionado */}
         {selectedClientId && (
           <div className="bg-white p-6 rounded-lg shadow-md mb-8">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Pagos Pendientes de {selectedClientName}</h2>
@@ -197,13 +259,12 @@ function CobradorDashboard() {
                 <table className="min-w-full bg-white border border-gray-200">
                   <thead>
                     <tr>
-                      {/* Columna de Cliente y Teléfono Cliente ya no son necesarias aquí porque ya se seleccionó */}
                       <th className="py-2 px-4 border-b text-left text-gray-600">ID Pago</th>
                       <th className="py-2 px-4 border-b text-left text-gray-600">Fecha Cuota</th>
                       <th className="py-2 px-4 border-b text-left text-gray-600">Monto Cuota</th>
                       <th className="py-2 px-4 border-b text-left text-gray-600">Monto Pagado</th>
                       <th className="py-2 px-4 border-b text-left text-gray-600">Estado</th>
-                      {/* Puedes añadir una columna para "Registrar Pago" aquí */}
+                      <th className="py-2 px-4 border-b text-left text-gray-600">Acciones</th> {/* ¡AJUSTE CLAVE! */}
                     </tr>
                   </thead>
                   <tbody>
@@ -219,6 +280,16 @@ function CobradorDashboard() {
                           'text-red-600'
                         }`}>
                           {payment.estado}
+                        </td>
+                        <td className="py-2 px-4 border-b"> {/* ¡AJUSTE CLAVE! Botón de pago */}
+                          {payment.estado !== 'PAGADO' && ( // Solo muestra el botón si no está PAGADO
+                            <button
+                              onClick={() => handleRegisterPayment(payment.id, payment.monto_cuota, payment.monto_pagado)}
+                              className="bg-blue-600 text-white p-1 rounded-md text-xs hover:bg-blue-700 transition duration-300"
+                            >
+                              Registrar Pago
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}
