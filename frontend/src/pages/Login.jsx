@@ -1,13 +1,13 @@
 // C:\Users\1vkwi\prfin-app\frontend\src\pages\Login.jsx
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // NUEVO: Importa useNavigate
+import { useNavigate } from 'react-router-dom';
 
 function Login() {
   const [telefono_whatsapp, setTelefonoWhatsapp] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const navigate = useNavigate(); // NUEVO: Inicializa el hook de navegación
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault(); // Previene el comportamiento predeterminado del formulario de recargar la página
@@ -15,7 +15,6 @@ function Login() {
     setMessage(''); // Limpia mensajes anteriores
 
     try {
-      // ¡NUEVO! Usa la variable de entorno para la URL del backend
       const response = await fetch(import.meta.env.VITE_API_URL + '/api/login', {
         method: 'POST',
         headers: {
@@ -28,11 +27,22 @@ function Login() {
 
       if (response.ok) {
         setMessage(data.message);
-        // Guarda el token en el almacenamiento local del navegador
         localStorage.setItem('token', data.token);
 
-        // NUEVO: Redirige al usuario a su dashboard después de un login exitoso
-        navigate('/dashboard'); 
+        // ¡CORRECCIÓN CLAVE AQUÍ! Redirección condicional basada en el rol
+        // Decodificar el token para obtener el rol del usuario
+        // El payload del JWT está en la segunda parte del token (split('.')[1]) y está codificado en Base64.
+        const decodedToken = JSON.parse(atob(data.token.split('.')[1]));
+        const userRole = decodedToken.rol; // Asumiendo que 'rol' está en el payload del token
+
+        // Redireccionar según el rol
+        if (userRole === 'admin') {
+            navigate('/admin');
+        } else if (userRole === 'cobrador') {
+            navigate('/cobrador');
+        } else { // Por defecto, si es 'cliente' o cualquier otro rol no especificado
+            navigate('/dashboard');
+        }
       } else {
         setError(data.error || 'Error al iniciar sesión.');
       }
