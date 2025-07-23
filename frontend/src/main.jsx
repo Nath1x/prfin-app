@@ -6,6 +6,7 @@ import App from './App.jsx'; // Pantalla de bienvenida / estado
 import Login from './pages/Login.jsx'; // Página de login
 import Dashboard from './pages/Dashboard.jsx'; // Dashboard del usuario
 import AdminDashboard from './pages/AdminDashboard.jsx'; // Panel de administración
+import CobradorDashboard from './pages/CobradorDashboard.jsx'; // ¡CORRECCIÓN CLAVE AQUÍ! NUEVO: Panel de cobradores
 import './index.css';
 
 // Componente auxiliar para proteger rutas (para usuarios autenticados)
@@ -42,7 +43,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           }
         />
         
-        {/* NUEVA RUTA PROTEGIDA para el panel de administración */}
+        {/* Ruta protegida para el panel de administración */}
         <Route
           path="/admin"
           element={
@@ -51,6 +52,17 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             </AdminRoute>
           }
         />
+
+        {/* ¡CORRECCIÓN CLAVE AQUÍ! NUEVA RUTA PROTEGIDA PARA EL COBRADOR */}
+        <Route
+          path="/cobrador"
+          element={
+            <AdminRoute> {/* Usamos AdminRoute temporalmente para protegerla con token. Luego se refinará a una CobradorRoute si quieres */}
+              <CobradorDashboard />
+            </AdminRoute>
+          }
+        />
+
         {/* Aquí puedes añadir más rutas si lo necesitas */}
       </Routes>
     </Router>
