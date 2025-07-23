@@ -70,10 +70,9 @@ function AdminDashboard() {
               localStorage.removeItem('token');
               navigate('/login');
           }
-      } 
-      // finally { // No poner aquí, se maneja al final de fetchUsers y fetchLoans
-      //     setLoading(false); 
-      // }
+      } finally { // ¡NUEVO! Siempre desactiva el estado de carga
+          setLoading(false); 
+      }
   };
 
   // Función para obtener pagos pendientes/parciales de un usuario para el formulario de pago
