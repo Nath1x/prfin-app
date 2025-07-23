@@ -308,91 +308,123 @@ app.post('/api/admin/prestamos', authenticateToken('admin'), async (req, res) =>
     }
 });
 
-// ¡MUY IMPORTANTE! RUTA PARA "ELIMINAR" LÓGICAMENTE (ARCHIVAR) PRÉSTAMOS
-// Cambiamos a método POST para evitar el 404 persistente y actualizamos su estado
-app.post('/api/admin/borrar-prestamo/:id', authenticateToken('admin'), async (req, res) => { // ¡CAMBIADO A POST!
+app.delete('/api/admin/prestamos/:id', authenticateToken('admin'), async (req, res) => {
     const { id } = req.params;
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-
-        // 1. Verificar si el préstamo existe y su estado actual
-        const prestamoResult = await pool.query('SELECT usuario_id, monto_total_a_pagar, estado_prestamo FROM prestamos WHERE id = $1', [id]);
+        const prestamoResult = await client.query(
+            'SELECT usuario_id, monto_total_a_pagar FROM prestamos WHERE id = $1',
+            [id]
+        );
         const prestamo = prestamoResult.rows[0];
         if (!prestamo) {
             await client.query('ROLLBACK');
             return res.status(404).json({ error: 'Préstamo no encontrado.' });
         }
-        
-        // No permitimos archivar si el préstamo no está completamente pagado
-        if (parseFloat(prestamo.monto_total_a_pagar) > 0 && prestamo.estado_prestamo !== 'PAGADO') { // Si tiene saldo pendiente y no está PAGADO
-            await client.query('ROLLBACK');
-            return res.status(400).json({ error: `No se puede archivar el préstamo con saldo pendiente ($${parseFloat(prestamo.monto_total_a_pagar).toFixed(2)}). Debe estar pagado para archivarse.` });
-        }
-
-        // 2. Cambiar el estado del préstamo a 'ARCHIVADO'
-        await client.query(
-            "UPDATE prestamos SET estado_prestamo = 'ARCHIVADO' WHERE id = $1",
+        const pagosAsociadosResult = await client.query(
+            'SELECT SUM(monto_pagado) as total_pagado_en_prestamo FROM pagos WHERE prestamo_id = $1',
             [id]
         );
-
+        const totalPagadoEnPrestamo = parseFloat(pagosAsociadosResult.rows[0].total_pagado_en_prestamo) || 0;
+        if (totalPagadoEnPrestamo > 0) {
+             await client.query('ROLLBACK');
+             return res.status(400).json({ error: `No se puede eliminar un préstamo con pagos registrados ($${totalPagadoEnPrestamo.toFixed(2)} ya pagado).` });
+        }
+        await client.query(
+            'UPDATE usuarios SET saldo_pendiente_total = saldo_pendiente_total - $1 WHERE id = $2',
+            [prestamo.monto_total_a_pagar, prestamo.usuario_id]
+        );
+        await client.query(
+            'DELETE FROM prestamos WHERE id = $1',
+            [id]
+        );
         await client.query('COMMIT');
-        res.status(200).json({ message: 'Préstamo archivado exitosamente.' }); // Mensaje actualizado
+        res.status(200).json({ message: 'Préstamo eliminado exitosamente. Saldo de usuario ajustado.' });
     } catch (error) {
         await client.query('ROLLBACK');
-        console.error('Error al archivar préstamo:', error);
-        res.status(500).json({ error: 'Error interno del servidor al archivar préstamo', details: error.message });
+        console.error('Error al eliminar préstamo:', error);
+        res.status(500).json({ error: 'Error interno del servidor al eliminar préstamo', details: error.message });
     } finally {
         client.release();
     }
 });
 
+// ##########################################################################
+// ## RUTA MODIFICADA PARA ENVIAR WHATSAPP TRAS UN PAGO ##
+// ##########################################################################
+app.post('/api/admin/pagar', authenticateToken('admin'), async (req, res) => {
+    const { pago_id, monto_pagado, referencia_pago } = req.body;
 
-// ¡NUEVA RUTA! Para eliminar usuarios
-app.delete('/api/admin/usuarios/:id', authenticateToken('admin'), async (req, res) => {
-    const { id } = req.params;
+    if (!pago_id || !monto_pagado) {
+        return res.status(400).json({ error: 'ID de pago y monto son obligatorios.' });
+    }
+    const parsedMontoPagado = parseFloat(monto_pagado);
+    if (isNaN(parsedMontoPagado) || parsedMontoPagado <= 0) {
+        return res.status(400).json({ error: 'Monto pagado debe ser un número válido y mayor a cero.' });
+    }
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
 
-        // 1. Verificar si el usuario tiene saldo pendiente
-        const userResult = await pool.query('SELECT saldo_pendiente_total FROM usuarios WHERE id = $1', [id]);
-        const user = userResult.rows[0];
-        if (!user) {
+        const pagoResult = await client.query(
+            `SELECT 
+                p.usuario_id, p.monto_cuota, p.monto_pagado, p.prestamo_id,
+                u.nombre_completo, u.telefono_whatsapp
+             FROM pagos p
+             JOIN usuarios u ON p.usuario_id = u.id
+             WHERE p.id = $1 FOR UPDATE`,
+            [pago_id]
+        );
+        const pago = pagoResult.rows[0];
+
+        if (!pago) {
             await client.query('ROLLBACK');
-            return res.status(404).json({ error: 'Usuario no encontrado.' });
+            return res.status(404).json({ error: 'Cuota no encontrada.' });
         }
-        if (parseFloat(user.saldo_pendiente_total) > 0) {
+        if (pago.monto_pagado >= pago.monto_cuota) {
             await client.query('ROLLBACK');
-            return res.status(400).json({ error: `No se puede eliminar el usuario porque tiene un saldo pendiente de $${parseFloat(user.saldo_pendiente_total).toFixed(2)}.` });
+            return res.status(400).json({ error: 'Esta cuota ya ha sido pagada en su totalidad.' });
         }
 
-        // 2. Verificar si el usuario está asignado como cobrador a otros usuarios
-        const assignedClientsCountResult = await pool.query('SELECT COUNT(*) FROM usuarios WHERE cobrador_asignado_id = $1', [id]);
-        if (parseInt(assignedClientsCountResult.rows[0].count) > 0) {
-            await client.query('ROLLBACK');
-            return res.status(400).json({ error: 'No se puede eliminar este usuario porque tiene clientes asignados. Desasígnalos primero.' });
+        let montoRealmentePagadoEnEstaTransaccion = parsedMontoPagado;
+        let nuevoMontoPagadoCuota = pago.monto_pagado + parsedMontoPagado;
+        if (nuevoMontoPagadoCuota > pago.monto_cuota) {
+            montoRealmentePagadoEnEstaTransaccion = pago.monto_cuota - pago.monto_pagado;
+            nuevoMontoPagadoCuota = pago.monto_cuota;
         }
+        let nuevoEstadoCuota = (nuevoMontoPagadoCuota >= pago.monto_cuota) ? 'PAGADO' : 'PARCIAL';
+        
+        const updatedPagoResult = await client.query(
+            'UPDATE pagos SET monto_pagado = $1, fecha_pago = NOW(), estado = $2, referencia_pago = $3 WHERE id = $4 RETURNING *',
+            [nuevoMontoPagadoCuota, nuevoEstadoCuota, referencia_pago, pago_id]
+        );
 
-        // 3. Eliminar los registros asociados (préstamos y pagos) para mantener la integridad.
-        // Asumimos que si saldo_pendiente_total es 0, sus préstamos/pagos ya están saldados.
-        // Los borramos para que no queden registros "huérfanos".
-        await client.query('DELETE FROM pagos WHERE usuario_id = $1', [id]);
-        await client.query('DELETE FROM prestamos WHERE usuario_id = $1', [id]);
+        await client.query(
+            'UPDATE usuarios SET saldo_pendiente_total = saldo_pendiente_total - $1 WHERE id = $2',
+            [montoRealmentePagadoEnEstaTransaccion, pago.usuario_id]
+        );
 
-        // 4. Finalmente, eliminar el usuario
-        await client.query('DELETE FROM usuarios WHERE id = $1', [id]);
+        if (pago.telefono_whatsapp) {
+            const mensajeWhatsApp = `Hola ${pago.nombre_completo}, confirmamos tu pago de $${montoRealmentePagadoEnEstaTransaccion.toFixed(2)} MXN. ¡Gracias!\n\nReferencia: ${referencia_pago || 'N/A'}`;
+            try {
+                await sendWhatsAppMessage(pago.telefono_whatsapp, mensajeWhatsApp);
+                console.log(`Mensaje de confirmación de pago enviado a ${pago.telefono_whatsapp}`);
+            } catch (whatsappError) {
+                console.error('Error al enviar WhatsApp (el pago SÍ fue registrado):', whatsappError.message);
+            }
+        }
 
         await client.query('COMMIT');
-        res.status(200).json({ message: 'Usuario eliminado exitosamente.' });
+        res.status(200).json({
+            message: 'Pago registrado y notificación enviada exitosamente.',
+            pagoActualizado: updatedPagoResult.rows[0],
+        });
+
     } catch (error) {
         await client.query('ROLLBACK');
-        console.error('Error al eliminar usuario:', error);
-        // Si hay un error de llave foránea por alguna razón (ej. otra tabla no cubierta)
-        if (error.code === '23503') { 
-            return res.status(400).json({ error: 'Error de integridad: El usuario tiene referencias en otras tablas. Asegure que no tenga préstamos, pagos o asignaciones pendientes.' });
-        }
-        res.status(500).json({ error: 'Error interno del servidor al eliminar usuario', details: error.message });
+        console.error('Error al registrar pago:', error);
+        res.status(500).json({ error: 'Error interno del servidor al registrar pago', details: error.message });
     } finally {
         client.release();
     }
@@ -402,7 +434,7 @@ app.delete('/api/admin/usuarios/:id', authenticateToken('admin'), async (req, re
 // Obtener todos los usuarios (para el admin)
 app.get('/api/admin/usuarios', authenticateToken('admin'), async (req, res) => {
     try {
-        const result = await pool.query('SELECT id, nombre_completo, telefono_whatsapp, saldo_pendiente_total, activo, rol, cobrador_asignado_id, fecha_creacion FROM usuarios ORDER BY fecha_creacion DESC');
+        const result = await pool.query('SELECT id, nombre_completo, telefono_whatsapp, saldo_pendiente_total, activo, rol, cobrador_asignado_id, fecha_creacion FROM usuarios ORDER BY fecha_creacion DESC'); // ¡CORREGIDO! Aquí se añadieron rol y cobrador_asignado_id
         res.json(result.rows);
     } catch (error) {
         console.error('Error al obtener usuarios (admin):', error);
