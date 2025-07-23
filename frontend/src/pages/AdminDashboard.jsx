@@ -253,7 +253,8 @@ function AdminDashboard() {
       const data = await response.json();
 
       if (response.ok) {
-        setLoanMessage(data.message + ` Monto total a pagar: $${data.montoTotalAPagar}. Cuota diaria: $${data.montoCuotaDiaria}`);
+        // CORRECCIÓN CLAVE AQUÍ PARA MENSAJE DE ÉXITO: Accediendo a data.prestamo.monto_total_a_pagar
+        setLoanMessage(data.message + ` Monto total a pagar: $${Number(data.prestamo.monto_total_a_pagar).toFixed(2)}. Cuota diaria: $${Number(data.prestamo.monto_cuota_diaria).toFixed(2)}`);
         setSelectedUserId('');
         setMontoPrestamo('');
         setPlazoDias('');
