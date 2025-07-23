@@ -92,7 +92,6 @@ function AdminDashboard() {
                 'Authorization': `Bearer ${token}`
             }
         });
-        // ¡CORRECCIÓN CLAVE AQUÍ! Usar 'response.json()'
         const data = await response.json(); 
         if (response.ok) {
             const pendingOrPartial = data.filter(p => 
@@ -127,7 +126,8 @@ function AdminDashboard() {
       });
       const data = await response.json();
       if (response.ok) {
-        setLoans(data);
+        // ¡AJUSTE CLAVE AQUÍ! Filtrar préstamos archivados para no mostrarlos
+        setLoans(data.filter(loan => loan.estado_prestamo !== 'ARCHIVADO'));
       } else {
         setDeleteLoanError(data.error || 'Error al cargar préstamos.');
       }
@@ -139,7 +139,7 @@ function AdminDashboard() {
     }
   };
 
-  // ¡NUEVA FUNCIÓN! Para eliminar un usuario
+  // ¡NUEVA FUNCIÓN! Para eliminar/archivar un usuario
   const handleDeleteUser = async (userId) => {
       if (window.confirm('¿Estás seguro de que quieres eliminar este usuario? Si tiene saldo pendiente, préstamos o clientes asignados, la eliminación podría fallar.')) {
           const token = localStorage.getItem('token');
@@ -158,13 +158,48 @@ function AdminDashboard() {
               const data = await response.json();
               if (response.ok) {
                   alert(data.message);
-                  fetchUsers(); // Recargar la lista de usuarios para que se vea el cambio
+                  fetchUsers(); 
               } else {
                   alert(data.error || 'Error al eliminar usuario.');
               }
           } catch (err) {
               console.error('Error de red al eliminar usuario:', err);
               alert('No se pudo conectar al servidor para eliminar usuario.');
+          }
+      }
+  };
+
+  // ¡NUEVA FUNCIÓN! Para archivar un préstamo (soft delete)
+  const handleArchiveLoan = async (loanId) => {
+      setDeleteLoanMessage('');
+      setDeleteLoanError('');
+
+      if (window.confirm('¿Estás seguro de que quieres ARCHIVAR este préstamo? Solo se puede archivar si está completamente pagado.')) {
+          const token = localStorage.getItem('token');
+          if (!token) {
+              setDeleteLoanError('No autenticado. Por favor, inicia sesión de nuevo.');
+              navigate('/login');
+              return;
+          }
+          try {
+              // ¡AJUSTE CLAVE AQUÍ! Usamos POST y la nueva ruta /borrar-prestamo
+              const response = await fetch(import.meta.env.VITE_API_URL + `/api/admin/borrar-prestamo/${loanId}`, {
+                  method: 'POST', // Cambiado a POST
+                  headers: {
+                      'Authorization': `Bearer ${token}`
+                  }
+              });
+              const data = await response.json();
+              if (response.ok) {
+                  setDeleteLoanMessage(data.message);
+                  fetchUsers(); // Actualiza saldos de usuarios
+                  fetchLoans(); // Recargar la lista de préstamos (ahora filtrará los archivados)
+              } else {
+                  setDeleteLoanError(data.error || 'Error al archivar préstamo.');
+              }
+          } catch (err) {
+              console.error('Error de red al archivar préstamo:', err);
+              setDeleteLoanError('No se pudo conectar al servidor para archivar préstamo.');
           }
       }
   };
@@ -360,376 +395,337 @@ function AdminDashboard() {
         }
       };
 
-      const handleDeleteLoan = async (loanId) => {
-        setDeleteLoanMessage('');
-        setDeleteLoanError('');
+  // ¡Aquí estaba la función handleDeleteLoan original que ya no usaremos para préstamos!
 
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setDeleteLoanError('No autenticado. Por favor, inicia sesión de nuevo.');
-          navigate('/login');
-          return;
-        }
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center font-sans">
+        <p className="text-gray-700 text-xl">Cargando panel de administración...</p>
+      </div>
+    );
+  }
 
-        if (window.confirm('¿Estás seguro de que quieres eliminar este préstamo? Esto borrará todas sus cuotas asociadas y ajustará el saldo del usuario.')) {
-            try {
-                const response = await fetch(import.meta.env.VITE_API_URL + `/api/admin/prestamos/${loanId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center font-sans">
+        <div className="bg-white p-8 rounded-lg shadow-lg text-center max-w-md w-full">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Error al Cargar</h2>
+          <p className="text-gray-700 mb-6">{error}</p>
+          <button
+            onClick={handleLogout}
+            className="bg-blue-600 text-white p-2 rounded-md font-semibold hover:bg-blue-700 transition duration-300"
+          >
+            Volver a Login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-                const data = await response.json();
+  return (
+    <div className="min-h-screen bg-gray-100 p-4 font-sans">
+      <header className="flex justify-between items-center bg-white p-4 rounded-lg shadow-md mb-6">
+        <h1 className="text-2xl font-bold text-blue-700">PrFin - Panel de Administración</h1>
+        <button
+          onClick={handleLogout}
+          className="bg-red-500 text-white p-2 rounded-md font-semibold hover:bg-red-600 transition duration-300 text-sm"
+        >
+          Cerrar Sesión
+        </button>
+      </header>
 
-                if (response.ok) {
-                    setDeleteLoanMessage(data.message);
-                    fetchUsers(); 
-                    fetchLoans(); 
-                    if (selectedUserForPayment) {
-                        fetchUserPaymentsForRegistration(selectedUserForPayment);
-                    }
-                } else {
-                    setDeleteLoanError(data.error || 'Error al eliminar préstamo.');
-                }
-            } catch (err) {
-                console.error('Error de red al eliminar préstamo:', err);
-                alert('No se pudo conectar al servidor para eliminar préstamo.');
-            }
-        }
-      };
-
-
-      if (loading) {
-        return (
-          <div className="min-h-screen bg-gray-100 flex items-center justify-center font-sans">
-            <p className="text-gray-700 text-xl">Cargando panel de administración...</p>
-          </div>
-        );
-      }
-
-      if (error) {
-        return (
-          <div className="min-h-screen bg-gray-100 flex items-center justify-center font-sans">
-            <div className="bg-white p-8 rounded-lg shadow-lg text-center max-w-md w-full">
-              <h2 className="text-2xl font-bold text-red-600 mb-4">Error al Cargar</h2>
-              <p className="text-gray-700 mb-6">{error}</p>
-              <button
-                onClick={handleLogout}
-                className="bg-blue-600 text-white p-2 rounded-md font-semibold hover:bg-blue-700 transition duration-300"
-              >
-                Volver a Login
-              </button>
-            </div>
-          </div>
-        );
-      }
-
-      return (
-        <div className="min-h-screen bg-gray-100 p-4 font-sans">
-          <header className="flex justify-between items-center bg-white p-4 rounded-lg shadow-md mb-6">
-            <h1 className="text-2xl font-bold text-blue-700">PrFin - Panel de Administración</h1>
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 text-white p-2 rounded-md font-semibold hover:bg-red-600 transition duration-300"
-            >
-              Cerrar Sesión
-            </button>
-          </header>
-
-          <main className="container mx-auto">
-            {/* Formulario para agregar nuevo usuario */}
-            <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Agregar Nuevo Usuario</h2>
-                <form onSubmit={handleRegisterUser} className="space-y-4">
-                    <div>
-                        <input
-                            type="text"
-                            placeholder="Nombre Completo"
-                            className="w-full p-3 border border-gray-300 rounded-md"
-                            value={newUserName}
-                            onChange={(e) => setNewUserName(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div>
-                        <input
-                            type="text"
-                            placeholder="Teléfono WhatsApp (ej. +521234567890)"
-                            className="w-full p-3 border border-gray-300 rounded-md"
-                            value={newUserPhone}
-                            onChange={(e) => setNewUserPhone(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div>
-                        <input
-                            type="password"
-                            placeholder="Contraseña Inicial"
-                            className="w-full p-3 border border-gray-300 rounded-md"
-                            value={newUserPassword}
-                            onChange={(e) => setNewUserPassword(e.target.value)}
-                            required
-                        />
-                    </div>
-                    {/* ¡AJUSTE CLAVE AQUÍ! Selector para asignar cobrador */}
-                    {cobradoresList.length > 0 && (
-                        <div>
-                            <select
-                                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                value={selectedCobradorForNewUser}
-                                onChange={(e) => setSelectedCobradorForNewUser(e.target.value)}
-                            >
-                                <option value="">-- Asignar Cobrador (Opcional) --</option>
-                                {cobradoresList.map(cobrador => (
-                                    <option key={cobrador.id} value={cobrador.id}>
-                                        {cobrador.nombre_completo} ({cobrador.telefono_whatsapp})
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    )}
-                    <button
-                        type="submit"
-                        className="bg-green-600 text-white p-3 rounded-md font-semibold hover:bg-green-700 transition duration-300"
-                    >
-                        Registrar Usuario
-                    </button>
-                </form>
-                {registerMessage && <p className="mt-4 text-green-600">{registerMessage}</p>}
-                {registerError && <p className="mt-4 text-red-600">{registerError}</p>}
-            </div>
-
-            {/* Formulario para registrar un nuevo préstamo (MODIFICADO) */}
-            <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Registrar Nuevo Préstamo</h2>
-                <form onSubmit={handleRegisterLoan} className="space-y-4">
+      <main className="container mx-auto">
+        {/* Formulario para agregar nuevo usuario */}
+        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Agregar Nuevo Usuario</h2>
+            <form onSubmit={handleRegisterUser} className="space-y-4">
+                <div>
+                    <input
+                        type="text"
+                        placeholder="Nombre Completo"
+                        className="w-full p-3 border border-gray-300 rounded-md"
+                        value={newUserName}
+                        onChange={(e) => setNewUserName(e.target.value)}
+                        required
+                    />
+                </div>
+                <div>
+                    <input
+                        type="text"
+                        placeholder="Teléfono WhatsApp (ej. +521234567890)"
+                        className="w-full p-3 border border-gray-300 rounded-md"
+                        value={newUserPhone}
+                        onChange={(e) => setNewUserPhone(e.target.value)}
+                        required
+                    />
+                </div>
+                <div>
+                    <input
+                        type="password"
+                        placeholder="Contraseña Inicial"
+                        className="w-full p-3 border border-gray-300 rounded-md"
+                        value={newUserPassword}
+                        onChange={(e) => setNewUserPassword(e.target.value)}
+                        required
+                    />
+                </div>
+                {/* ¡AJUSTE CLAVE AQUÍ! Selector para asignar cobrador */}
+                {cobradoresList.length > 0 && (
                     <div>
                         <select
-                            className="w-full p-3 border border-gray-300 rounded-md"
-                            value={selectedUserId}
-                            onChange={(e) => setSelectedUserId(e.target.value)}
-                            required
+                            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            value={selectedCobradorForNewUser}
+                            onChange={(e) => setSelectedCobradorForNewUser(e.target.value)}
                         >
-                            <option value="">Selecciona un Usuario</option>
-                            {users.map(user => (
-                                <option key={user.id} value={user.id}>
-                                    {user.nombre_completo} ({user.telefono_whatsapp})
+                            <option value="">-- Asignar Cobrador (Opcional) --</option>
+                            {cobradoresList.map(cobrador => (
+                                <option key={cobrador.id} value={cobrador.id}>
+                                    {cobrador.nombre_completo} ({cobrador.telefono_whatsapp})
                                 </option>
                             ))}
                         </select>
-                    </div>
-                    <div>
-                        <input
-                            type="number"
-                            step="0.01"
-                            placeholder="Monto del Préstamo (ej. 1000.00)"
-                            className="w-full p-3 border border-gray-300 rounded-md"
-                            value={montoPrestamo}
-                            onChange={(e) => setMontoPrestamo(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div>
-                        <input
-                            type="number"
-                            step="1"
-                            placeholder="Plazo en Días (ej. 30)"
-                            className="w-full p-3 border border-gray-300 rounded-md"
-                            value={plazoDias}
-                            onChange={(e) => setPlazoDias(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <button
-                        type="submit"
-                        className="bg-blue-600 text-white p-3 rounded-md font-semibold hover:bg-blue-700 transition duration-300"
-                    >
-                        Registrar Préstamo
-                    </button>
-                </form>
-                {loanMessage && <p className="mt-4 text-green-600">{loanMessage}</p>}
-                {loanError && <p className="mt-4 text-red-600">{loanError}</p>}
-            </div>
-
-
-            {/* Formulario para registrar un pago */}
-            <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Registrar Pago</h2>
-                <form onSubmit={handleRegisterPayment} className="space-y-4">
-                    <div>
-                        <select
-                            className="w-full p-3 border border-gray-300 rounded-md"
-                            value={selectedUserForPayment}
-                            onChange={(e) => setSelectedUserForPayment(e.target.value)}
-                            required
-                        >
-                            <option value="">Selecciona un Usuario para el Pago</option>
-                            {users.map(user => (
-                                <option key={user.id} value={user.id}>
-                                    {user.nombre_completo} ({user.telefono_whatsapp})
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    {selectedUserForPayment && userPaymentsToRegister.length > 0 && (
-                        <div>
-                            <select
-                                className="w-full p-3 border border-gray-300 rounded-md"
-                                value={selectedPaymentId}
-                                onChange={(e) => setSelectedPaymentId(e.target.value)}
-                                required
-                            >
-                                <option value="">Selecciona una Cuota</option>
-                                {userPaymentsToRegister.map(payment => (
-                                    <option key={payment.id} value={payment.id}>
-                                        {new Date(payment.fecha_cuota).toLocaleDateString()} - ${Number(payment.monto_cuota || 0).toFixed(2)} ({payment.estado}) - Pagado: ${Number(payment.monto_pagado || 0).toFixed(2)}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    )}
-                    {selectedUserForPayment && userPaymentsToRegister.length === 0 && (
-                        <p className="text-gray-500 text-sm">Este usuario no tiene cuotas pendientes o parciales.</p>
-                    )}
-                    <div>
-                        <input
-                            type="number"
-                            step="0.01"
-                            placeholder="Monto a Pagar (ej. 50.00)"
-                            className="w-full p-3 border border-gray-300 rounded-md"
-                            value={paymentAmount}
-                            onChange={(e) => setPaymentAmount(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div>
-                        <input
-                            type="text"
-                            placeholder="Referencia de Pago (Opcional)"
-                            className="w-full p-3 border border-gray-300 rounded-md"
-                            value={paymentRef}
-                            onChange={(e) => setPaymentRef(e.target.value)}
-                        />
-                    </div>
-                    <button
-                        type="submit"
-                        className="bg-purple-600 text-white p-3 rounded-md font-semibold hover:bg-purple-700 transition duration-300"
-                    >
-                        Registrar Abono
-                    </button>
-                </form>
-                {paymentMessage && <p className="mt-4 text-green-600">{paymentMessage}</p>}
-                {paymentError && <p className="mt-4 text-red-600">{paymentError}</p>}
-            </div>
-
-            {/* Lista de Préstamos */}
-            <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Lista de Préstamos</h2>
-                {deleteLoanMessage && <p className="mb-4 text-green-600">{deleteLoanMessage}</p>}
-                {deleteLoanError && <p className="mb-4 text-red-600">{deleteLoanError}</p>}
-                {loans.length === 0 ? (
-                    <p className="text-gray-500 text-center">No hay préstamos registrados aún.</p>
-                ) : (
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full bg-white border border-gray-200">
-                            <thead>
-                                <tr>
-                                    <th className="py-2 px-4 border-b text-left text-gray-600">ID Préstamo</th>
-                                    <th className="py-2 px-4 border-b text-left text-gray-600">Usuario</th>
-                                    <th className="py-2 px-4 border-b text-left text-gray-600">Monto Capital</th>
-                                    <th className="py-2 px-4 border-b text-left text-gray-600">Monto Total</th>
-                                    <th className="py-2 px-4 border-b text-left text-gray-600">Cuota Diaria</th>
-                                    <th className="py-2 px-4 border-b text-left text-gray-600">Plazo (Días)</th>
-                                    <th className="py-2 px-4 border-b text-left text-gray-600">Fecha Inicio</th>
-                                    <th className="py-2 px-4 border-b text-left text-gray-600">Estado</th>
-                                    <th className="py-2 px-4 border-b text-left text-gray-600">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {loans.map((loan) => (
-                                    <tr key={loan.id} className="hover:bg-gray-50">
-                                        <td className="py-2 px-4 border-b text-sm">{loan.id}</td>
-                                        <td className="py-2 px-4 border-b">{loan.nombre_completo}</td>
-                                        <td className="py-2 px-4 border-b">${Number(loan.monto_capital || 0).toFixed(2)}</td>
-                                        <td className="py-2 px-4 border-b">${Number(loan.monto_total_a_pagar || 0).toFixed(2)}</td>
-                                        <td className="py-2 px-4 border-b">${Number(loan.monto_cuota_diaria || 0).toFixed(2)}</td>
-                                        <td className="py-2 px-4 border-b">{loan.plazo_dias}</td>
-                                        <td className="py-2 px-4 border-b">{new Date(loan.fecha_inicio).toLocaleDateString()}</td>
-                                        <td className="py-2 px-4 border-b">{loan.estado_prestamo}</td>
-                                        <td className="py-2 px-4 border-b">
-                                            <button
-                                                onClick={() => handleDeleteLoan(loan.id)}
-                                                className="bg-red-500 text-white p-1 rounded-md text-xs hover:bg-red-600 transition duration-300"
-                                            >
-                                                Eliminar
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
                     </div>
                 )}
-            </div>
-
-
-            {/* Lista de Usuarios */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Lista de Usuarios</h2>
-              {users.length === 0 ? (
-                <p className="text-gray-500 text-center">No hay usuarios registrados aún.</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full bg-white border border-gray-200">
-                    <thead>
-                      <tr>
-                        <th className="py-2 px-4 border-b text-left text-gray-600">ID Usuario</th>
-                        <th className="py-2 px-4 border-b text-left text-gray-600">Nombre</th>
-                        <th className="py-2 px-4 border-b text-left text-gray-600">Teléfono</th>
-                        <th className="py-2 px-4 border-b text-left text-gray-600">Saldo Pendiente</th>
-                        <th className="py-2 px-4 border-b text-left text-gray-600">Estado</th>
-                        <th className="py-2 px-4 border-b text-left text-gray-600">Rol</th>
-                        <th className="py-2 px-4 border-b text-left text-gray-600">Cobrador Asignado</th>
-                        <th className="py-2 px-4 border-b text-left text-gray-600">Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {users.map((user) => (
-                        <tr key={user.id} className="hover:bg-gray-50">
-                          <td className="py-2 px-4 border-b">{user.id}</td>
-                          <td className="py-2 px-4 border-b">{user.nombre_completo}</td>
-                          <td className="py-2 px-4 border-b">{user.telefono_whatsapp}</td>
-                          <td className="py-2 px-4 border-b">${Number(user.saldo_pendiente_total || 0).toFixed(2)}</td>
-                          <td className="py-2 px-4 border-b">
-                            <span className={`font-semibold ${user.activo ? 'text-green-600' : 'text-red-600'}`}>
-                              {user.activo ? 'Activo' : 'Inactivo'}
-                            </span>
-                          </td>
-                          <td className="py-2 px-4 border-b">{user.rol}</td>
-                          <td className="py-2 px-4 border-b">
-                            {user.cobrador_asignado_id 
-                                ? (cobradoresList.find(c => String(c.id) === String(user.cobrador_asignado_id))?.nombre_completo || user.cobrador_asignado_id) 
-                                : 'N/A'}
-                          </td>
-                          <td className="py-2 px-4 border-b">
-                            <button
-                                onClick={() => handleDeleteUser(user.id)}
-                                className="bg-red-500 text-white p-1 rounded-md text-xs hover:bg-red-600 transition duration-300"
-                            >
-                                Eliminar
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </main>
+                <button
+                    type="submit"
+                    className="bg-green-600 text-white p-3 rounded-md font-semibold hover:bg-green-700 transition duration-300"
+                >
+                    Registrar Usuario
+                </button>
+            </form>
+            {registerMessage && <p className="mt-4 text-green-600">{registerMessage}</p>}
+            {registerError && <p className="mt-4 text-red-600">{registerError}</p>}
         </div>
-      );
-    }
 
-    export default AdminDashboard;
+        {/* Formulario para registrar un nuevo préstamo (MODIFICADO) */}
+        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Registrar Nuevo Préstamo</h2>
+            <form onSubmit={handleRegisterLoan} className="space-y-4">
+                <div>
+                    <select
+                        className="w-full p-3 border border-gray-300 rounded-md"
+                        value={selectedUserId}
+                        onChange={(e) => setSelectedUserId(e.target.value)}
+                        required
+                    >
+                        <option value="">Selecciona un Usuario</option>
+                        {users.map(user => (
+                            <option key={user.id} value={user.id}>
+                                {user.nombre_completo} ({user.telefono_whatsapp})
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div>
+                    <input
+                        type="number"
+                        step="0.01"
+                        placeholder="Monto del Préstamo (ej. 1000.00)"
+                        className="w-full p-3 border border-gray-300 rounded-md"
+                        value={montoPrestamo}
+                        onChange={(e) => setMontoPrestamo(e.target.value)}
+                        required
+                    />
+                </div>
+                <div>
+                    <input
+                        type="number"
+                        step="1"
+                        placeholder="Plazo en Días (ej. 30)"
+                        className="w-full p-3 border border-gray-300 rounded-md"
+                        value={plazoDias}
+                        onChange={(e) => setPlazoDias(e.target.value)}
+                        required
+                    />
+                </div>
+                <button
+                    type="submit"
+                    className="bg-blue-600 text-white p-3 rounded-md font-semibold hover:bg-blue-700 transition duration-300"
+                >
+                    Registrar Préstamo
+                </button>
+            </form>
+            {loanMessage && <p className="mt-4 text-green-600">{loanMessage}</p>}
+            {loanError && <p className="mt-4 text-red-600">{loanError}</p>}
+        </div>
+
+
+        {/* Formulario para registrar un pago */}
+        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Registrar Pago</h2>
+            <form onSubmit={handleRegisterPayment} className="space-y-4">
+                <div>
+                    <select
+                        className="w-full p-3 border border-gray-300 rounded-md"
+                        value={selectedUserForPayment}
+                        onChange={(e) => setSelectedUserForPayment(e.target.value)}
+                        required
+                    >
+                        <option value="">Selecciona un Usuario para el Pago</option>
+                        {users.map(user => (
+                            <option key={user.id} value={user.id}>
+                                {user.nombre_completo} ({user.telefono_whatsapp})
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                {selectedUserForPayment && userPaymentsToRegister.length > 0 && (
+                    <div>
+                        <select
+                            className="w-full p-3 border border-gray-300 rounded-md"
+                            value={selectedPaymentId}
+                            onChange={(e) => setSelectedPaymentId(e.target.value)}
+                            required
+                        >
+                            <option value="">Selecciona una Cuota</option>
+                            {userPaymentsToRegister.map(payment => (
+                                <option key={payment.id} value={payment.id}>
+                                    {new Date(payment.fecha_cuota).toLocaleDateString()} - ${Number(payment.monto_cuota || 0).toFixed(2)} ({payment.estado}) - Pagado: ${Number(payment.monto_pagado || 0).toFixed(2)}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+                {selectedUserForPayment && userPaymentsToRegister.length === 0 && (
+                    <p className="text-gray-500 text-sm">Este usuario no tiene cuotas pendientes o parciales.</p>
+                )}
+                <div>
+                    <input
+                        type="number"
+                        step="0.01"
+                        placeholder="Monto a Pagar (ej. 50.00)"
+                        className="w-full p-3 border border-gray-300 rounded-md"
+                        value={paymentAmount}
+                        onChange={(e) => setPaymentAmount(e.target.value)}
+                        required
+                    />
+                </div>
+                <div>
+                    <input
+                        type="text"
+                        placeholder="Referencia de Pago (Opcional)"
+                        className="w-full p-3 border border-gray-300 rounded-md"
+                        value={paymentRef}
+                        onChange={(e) => setPaymentRef(e.target.value)}
+                    />
+                </div>
+                <button
+                    type="submit"
+                    className="bg-purple-600 text-white p-3 rounded-md font-semibold hover:bg-purple-700 transition duration-300"
+                >
+                    Registrar Abono
+                </button>
+            </form>
+            {paymentMessage && <p className="mt-4 text-green-600">{paymentMessage}</p>}
+            {paymentError && <p className="mt-4 text-red-600">{paymentError}</p>}
+        </div>
+
+        {/* Lista de Préstamos */}
+        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Lista de Préstamos</h2>
+            {deleteLoanMessage && <p className="mb-4 text-green-600">{deleteLoanMessage}</p>}
+            {deleteLoanError && <p className="mb-4 text-red-600">{deleteLoanError}</p>}
+            {loans.length === 0 ? (
+                <p className="text-gray-500 text-center">No hay préstamos registrados aún.</p>
+            ) : (
+                <div className="overflow-x-auto">
+                    <table className="min-w-full bg-white border border-gray-200">
+                        <thead>
+                            <tr>
+                                <th className="py-2 px-4 border-b text-left text-gray-600">ID Préstamo</th>
+                                <th className="py-2 px-4 border-b text-left text-gray-600">Usuario</th>
+                                <th className="py-2 px-4 border-b text-left text-gray-600">Monto Capital</th>
+                                <th className="py-2 px-4 border-b text-left text-gray-600">Monto Total</th>
+                                <th className="py-2 px-4 border-b text-left text-gray-600">Cuota Diaria</th>
+                                <th className="py-2 px-4 border-b text-left text-gray-600">Plazo (Días)</th>
+                                <th className="py-2 px-4 border-b text-left text-gray-600">Fecha Inicio</th>
+                                <th className="py-2 px-4 border-b text-left text-gray-600">Estado</th>
+                                <th className="py-2 px-4 border-b text-left text-gray-600">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loans.map((loan) => (
+                                <tr key={loan.id} className="hover:bg-gray-50">
+                                    <td className="py-2 px-4 border-b text-sm">{loan.id}</td>
+                                    <td className="py-2 px-4 border-b">{loan.nombre_completo}</td>
+                                    <td className="py-2 px-4 border-b">${Number(loan.monto_capital || 0).toFixed(2)}</td>
+                                    <td className="py-2 px-4 border-b">${Number(loan.monto_total_a_pagar || 0).toFixed(2)}</td>
+                                    <td className="py-2 px-4 border-b">${Number(loan.monto_cuota_diaria || 0).toFixed(2)}</td>
+                                    <td className="py-2 px-4 border-b">{loan.plazo_dias}</td>
+                                    <td className="py-2 px-4 border-b">{new Date(loan.fecha_inicio).toLocaleDateString()}</td>
+                                    <td className="py-2 px-4 border-b">{loan.estado_prestamo}</td>
+                                    <td className="py-2 px-4 border-b">
+                                        <button
+                                            onClick={() => handleDeleteLoan(loan.id)}
+                                            className="bg-red-500 text-white p-1 rounded-md text-xs hover:bg-red-600 transition duration-300"
+                                        >
+                                            Eliminar
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+        </div>
+
+
+        {/* Lista de Usuarios */}
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Lista de Usuarios</h2>
+          {users.length === 0 ? (
+            <p className="text-gray-500 text-center">No hay usuarios registrados aún.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white border border-gray-200">
+                <thead>
+                  <tr>
+                    <th className="py-2 px-4 border-b text-left text-gray-600">ID Usuario</th>
+                    <th className="py-2 px-4 border-b text-left text-gray-600">Nombre</th>
+                    <th className="py-2 px-4 border-b text-left text-gray-600">Teléfono</th>
+                    <th className="py-2 px-4 border-b text-left text-gray-600">Saldo Pendiente</th>
+                    <th className="py-2 px-4 border-b text-left text-gray-600">Estado</th>
+                    <th className="py-2 px-4 border-b text-left text-gray-600">Rol</th>
+                    <th className="py-2 px-4 border-b text-left text-gray-600">Cobrador Asignado</th>
+                    <th className="py-2 px-4 border-b text-left text-gray-600">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map((user) => (
+                    <tr key={user.id} className="hover:bg-gray-50">
+                      <td className="py-2 px-4 border-b">{user.id}</td>
+                      <td className="py-2 px-4 border-b">{user.nombre_completo}</td>
+                      <td className="py-2 px-4 border-b">{user.telefono_whatsapp}</td>
+                      <td className="py-2 px-4 border-b">${Number(user.saldo_pendiente_total || 0).toFixed(2)}</td>
+                      <td className="py-2 px-4 border-b">
+                        <span className={`font-semibold ${user.activo ? 'text-green-600' : 'text-red-600'}`}>
+                          {user.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </td>
+                      <td className="py-2 px-4 border-b">{user.rol}</td>
+                      <td className="py-2 px-4 border-b">
+                        {user.cobrador_asignado_id 
+                            ? (cobradoresList.find(c => String(c.id) === String(user.cobrador_asignado_id))?.nombre_completo || user.cobrador_asignado_id) 
+                            : 'N/A'}
+                      </td>
+                      <td className="py-2 px-4 border-b">
+                        <button
+                            onClick={() => handleDeleteUser(user.id)}
+                            className="bg-red-500 text-white p-1 rounded-md text-xs hover:bg-red-600 transition duration-300"
+                        >
+                            Eliminar
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}
+export default AdminDashboard;
