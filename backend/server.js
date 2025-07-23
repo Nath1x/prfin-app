@@ -308,44 +308,40 @@ app.post('/api/admin/prestamos', authenticateToken('admin'), async (req, res) =>
     }
 });
 
-// ¡MUY IMPORTANTE! RUTA DELETE PARA PRÉSTAMOS (RENOMBRADA)
-app.delete('/api/admin/borrar-prestamo/:id', authenticateToken('admin'), async (req, res) => {
+// ¡MUY IMPORTANTE! RUTA PARA "ELIMINAR" LÓGICAMENTE (ARCHIVAR) PRÉSTAMOS
+// Cambiamos a método POST para evitar el 404 persistente y actualizamos su estado
+app.post('/api/admin/borrar-prestamo/:id', authenticateToken('admin'), async (req, res) => { // ¡CAMBIADO A POST!
     const { id } = req.params;
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-        const prestamoResult = await client.query(
-            'SELECT usuario_id, monto_total_a_pagar FROM prestamos WHERE id = $1',
-            [id]
-        );
+
+        // 1. Verificar si el préstamo existe y su estado actual
+        const prestamoResult = await pool.query('SELECT usuario_id, monto_total_a_pagar, estado_prestamo FROM prestamos WHERE id = $1', [id]);
         const prestamo = prestamoResult.rows[0];
         if (!prestamo) {
             await client.query('ROLLBACK');
             return res.status(404).json({ error: 'Préstamo no encontrado.' });
         }
-        const pagosAsociadosResult = await client.query(
-            'SELECT SUM(monto_pagado) as total_pagado_en_prestamo FROM pagos WHERE prestamo_id = $1',
-            [id]
-        );
-        const totalPagadoEnPrestamo = parseFloat(pagosAsociadosResult.rows[0].total_pagado_en_prestamo) || 0;
-        if (totalPagadoEnPrestamo > 0) {
-             await client.query('ROLLBACK');
-             return res.status(400).json({ error: `No se puede eliminar un préstamo con pagos registrados ($${totalPagadoEnPrestamo.toFixed(2)} ya pagado).` });
+        
+        // No permitimos archivar si el préstamo no está completamente pagado
+        if (parseFloat(prestamo.monto_total_a_pagar) > 0 && prestamo.estado_prestamo !== 'PAGADO') { // Si tiene saldo pendiente y no está PAGADO
+            await client.query('ROLLBACK');
+            return res.status(400).json({ error: `No se puede archivar el préstamo con saldo pendiente ($${parseFloat(prestamo.monto_total_a_pagar).toFixed(2)}). Debe estar pagado para archivarse.` });
         }
+
+        // 2. Cambiar el estado del préstamo a 'ARCHIVADO'
         await client.query(
-            'UPDATE usuarios SET saldo_pendiente_total = saldo_pendiente_total - $1 WHERE id = $2',
-            [prestamo.monto_total_a_pagar, prestamo.usuario_id]
-        );
-        await client.query(
-            'DELETE FROM prestamos WHERE id = $1',
+            "UPDATE prestamos SET estado_prestamo = 'ARCHIVADO' WHERE id = $1",
             [id]
         );
+
         await client.query('COMMIT');
-        res.status(200).json({ message: 'Préstamo eliminado exitosamente. Saldo de usuario ajustado.' });
+        res.status(200).json({ message: 'Préstamo archivado exitosamente.' }); // Mensaje actualizado
     } catch (error) {
         await client.query('ROLLBACK');
-        console.error('Error al eliminar préstamo:', error);
-        res.status(500).json({ error: 'Error interno del servidor al eliminar préstamo', details: error.message });
+        console.error('Error al archivar préstamo:', error);
+        res.status(500).json({ error: 'Error interno del servidor al archivar préstamo', details: error.message });
     } finally {
         client.release();
     }
