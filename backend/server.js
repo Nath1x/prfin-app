@@ -8,7 +8,7 @@ const { Pool } = require('pg'); // Cliente PostgreSQL
 const cors = require('cors');   // Manejo de CORS
 const bcrypt = require('bcryptjs'); // Para cifrar contraseñas
 const jwt = require('jsonwebtoken'); // Para JSON Web Tokens
-const twilio = require('twilio'); // ¡CORRECCIÓN CLAVE AQUÍ! Importa la librería de Twilio
+const twilio = require('twilio'); // Importa la librería de Twilio
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -24,18 +24,16 @@ const pool = new Pool({
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
-    // ¡CORRECCIÓN CLAVE AQUÍ! CONFIGURACIÓN SSL PARA RENDER
     ssl: {
         rejectUnauthorized: false // Permite la conexión SSL sin verificar el certificado (para Render)
     }
 });
 
-// ¡CORRECCIÓN CLAVE AQUÍ! Inicializar cliente de Twilio
+// Inicializar cliente de Twilio
 const twilioClient = new twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 const twilioWhatsappNumber = process.env.TWILIO_WHATSAPP_NUMBER; // Tu número de sandbox de Twilio
 
-// ¡CORRECCIÓN CLAVE AQUÍ! --- FUNCIONES DE AYUDA PARA WHATSAPP ---
-// Función unificada para enviar mensajes de WhatsApp (usaremos la de formato libre por ahora)
+// --- FUNCIONES DE AYUDA PARA WHATSAPP ---
 async function sendWhatsAppMessage(to, body) {
     try {
         const message = await twilioClient.messages.create({
@@ -47,29 +45,27 @@ async function sendWhatsAppMessage(to, body) {
         return { success: true, sid: message.sid };
     } catch (error) {
         console.error(`Error al enviar mensaje WhatsApp a ${to}:`, error.message);
-        // Devolvemos el error para que la función que llama pueda manejarlo
         throw new Error(`Fallo al enviar WhatsApp: ${error.message}`);
     }
 }
 
 
-// ¡CORRECCIÓN CLAVE AQUÍ! Middleware para proteger rutas y verificar roles
+// Middleware para proteger rutas y verificar roles
 const authenticateToken = (requiredRole) => {
-    return async (req, res, next) => { // Hacemos esta función async para poder usar await
+    return async (req, res, next) => {
         const authHeader = req.headers['authorization'];
-        const token = authHeader && authHeader.split(' ')[1]; // Formato: Bearer TOKEN
+        const token = authHeader && authHeader.split(' ')[1];
 
-        if (token == null) return res.sendStatus(401); // Si no hay token
+        if (token == null) return res.sendStatus(401);
 
-        jwt.verify(token, process.env.JWT_SECRET, async (err, user) => { // jwt.verify ahora también es async
+        jwt.verify(token, process.env.JWT_SECRET, async (err, user) => {
             if (err) {
                 console.error("JWT verification error:", err.message);
-                return res.sendStatus(403); // Token no válido o expirado
+                return res.sendStatus(403);
             }
             
-            req.user = user; // Guarda la información del usuario del token en la solicitud
+            req.user = user;
 
-            // Si se requiere un rol específico, verificarlo
             if (requiredRole) {
                 try {
                     const result = await pool.query('SELECT rol FROM usuarios WHERE id = $1', [user.id]);
@@ -84,7 +80,7 @@ const authenticateToken = (requiredRole) => {
                     return res.status(500).json({ error: 'Error interno del servidor al verificar rol.' });
                 }
             }
-            next(); // Continúa con la siguiente función de middleware/ruta
+            next();
         });
     };
 };
@@ -110,8 +106,7 @@ app.get('/test-db', async (req, res) => {
     }
 });
 
-// ¡CORRECCIÓN CLAVE AQUÍ! Ruta de prueba para WhatsApp que usamos para depurar
-app.post('/api/test-whatsapp', authenticateToken(), async (req, res) => { // authenticateToken()
+app.post('/api/test-whatsapp', authenticateToken(), async (req, res) => {
     const { to, messageBody } = req.body;
     if (!to || !messageBody) {
         return res.status(400).json({ error: 'Número de destino y cuerpo del mensaje son obligatorios.' });
@@ -127,7 +122,7 @@ app.post('/api/test-whatsapp', authenticateToken(), async (req, res) => { // aut
 
 // --- RUTAS DE AUTENTICACIÓN Y USUARIOS ---
 
-app.post('/api/register', authenticateToken('admin'), async (req, res) => { // ¡CORRECCIÓN CLAVE AQUÍ! authenticateToken('admin')
+app.post('/api/register', authenticateToken('admin'), async (req, res) => {
     const { nombre_completo, telefono_whatsapp, password, rol, cobrador_asignado_id } = req.body;
     if (!nombre_completo || !telefono_whatsapp || !password) {
         return res.status(400).json({ error: 'Nombre, teléfono y contraseña son obligatorios.' });
@@ -137,16 +132,13 @@ app.post('/api/register', authenticateToken('admin'), async (req, res) => { // �
         const salt = await bcrypt.genSalt(10);
         const password_hash = await bcrypt.hash(password, salt);
 
-        // Determina el rol a asignar (solo 'admin' puede asignar 'admin' o 'cobrador', si no, es 'cliente')
         let finalRole = 'cliente';
         if (req.user.rol === 'admin' && (rol === 'admin' || rol === 'cobrador')) {
             finalRole = rol;
         }
 
-        // Asigna cobrador_asignado_id si el rol es 'admin' y se proporciona un ID válido
         let finalCobradorAsignadoId = null;
         if (req.user.rol === 'admin' && cobrador_asignado_id) {
-            // Opcional: Podrías verificar que cobrador_asignado_id realmente existe y tiene rol 'cobrador'
             finalCobradorAsignadoId = cobrador_asignado_id;
         }
 
@@ -171,7 +163,7 @@ app.post('/api/login', async (req, res) => {
     }
     try {
         const result = await pool.query(
-            'SELECT id, nombre_completo, telefono_whatsapp, password_hash, rol FROM usuarios WHERE telefono_whatsapp = $1', // ¡CORRECCIÓN CLAVE AQUÍ! Añadir 'rol' al SELECT
+            'SELECT id, nombre_completo, telefono_whatsapp, password_hash, rol FROM usuarios WHERE telefono_whatsapp = $1', // ¡CORREGIDO! Añadimos 'rol' aquí
             [telefono_whatsapp]
         );
         const user = result.rows[0];
@@ -183,7 +175,7 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ error: 'Credenciales inválidas.' });
         }
         const token = jwt.sign(
-            { id: user.id, telefono_whatsapp: user.telefono_whatsapp, nombre_completo: user.nombre_completo, rol: user.rol }, // ¡CORRECCIÓN CLAVE AQUÍ! Añadir 'rol' al token
+            { id: user.id, telefono_whatsapp: user.telefono_whatsapp, nombre_completo: user.nombre_completo, rol: user.rol }, // ¡CORREGIDO! Añadimos 'rol' al token
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );
@@ -194,10 +186,10 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-app.get('/api/me', authenticateToken(), async (req, res) => { // authenticateToken()
+app.get('/api/me', authenticateToken(), async (req, res) => {
     try {
         const result = await pool.query(
-            'SELECT id, nombre_completo, telefono_whatsapp, saldo_pendiente_total, activo, rol FROM usuarios WHERE id = $1', // ¡CORRECCIÓN CLAVE AQUÍ! Añadir 'rol' al SELECT
+            'SELECT id, nombre_completo, telefono_whatsapp, saldo_pendiente_total, activo, rol FROM usuarios WHERE id = $1', // ¡CORREGIDO! Añadimos 'rol' aquí
             [req.user.id]
         );
         const user = result.rows[0];
@@ -211,7 +203,7 @@ app.get('/api/me', authenticateToken(), async (req, res) => { // authenticateTok
     }
 });
 
-app.get('/api/me/pagos', authenticateToken(), async (req, res) => { // authenticateToken()
+app.get('/api/me/pagos', authenticateToken(), async (req, res) => {
     try {
         const result = await pool.query(
             'SELECT id, fecha_cuota, monto_cuota, monto_pagado, fecha_pago, estado, referencia_pago, observaciones FROM pagos WHERE usuario_id = $1 ORDER BY fecha_cuota DESC',
@@ -224,11 +216,10 @@ app.get('/api/me/pagos', authenticateToken(), async (req, res) => { // authentic
     }
 });
 
-// ¡CORRECCIÓN CLAVE AQUÍ! --- RUTAS PARA COBRADORES ---
-// Ruta para que el cobrador vea sus clientes asignados
+// --- RUTAS PARA COBRADORES ---
 app.get('/api/cobrador/mis-clientes', authenticateToken('cobrador'), async (req, res) => {
     try {
-        const cobradorId = req.user.id; // ID del cobrador autenticado
+        const cobradorId = req.user.id;
         const result = await pool.query(
             'SELECT id, nombre_completo, telefono_whatsapp, saldo_pendiente_total, activo FROM usuarios WHERE cobrador_asignado_id = $1 ORDER BY nombre_completo',
             [cobradorId]
@@ -240,7 +231,6 @@ app.get('/api/cobrador/mis-clientes', authenticateToken('cobrador'), async (req,
     }
 });
 
-// Ruta para que el cobrador vea los pagos pendientes de sus clientes asignados
 app.get('/api/cobrador/mis-pagos-pendientes', authenticateToken('cobrador'), async (req, res) => {
     try {
         const cobradorId = req.user.id;
@@ -264,7 +254,7 @@ app.get('/api/cobrador/mis-pagos-pendientes', authenticateToken('cobrador'), asy
 
 // --- GESTIÓN DE PAGOS (API para el panel de administración) ---
 
-app.post('/api/admin/prestamos', authenticateToken('admin'), async (req, res) => { // authenticateToken('admin')
+app.post('/api/admin/prestamos', authenticateToken('admin'), async (req, res) => {
     const { usuario_id, monto_prestamo, plazo_dias } = req.body;
     if (!usuario_id || !monto_prestamo || !plazo_dias) {
         return res.status(400).json({ error: 'Usuario, monto del préstamo y plazo en días son obligatorios.' });
@@ -282,7 +272,6 @@ app.post('/api/admin/prestamos', authenticateToken('admin'), async (req, res) =>
     try {
         await client.query('BEGIN');
         const prestamoResult = await client.query(
-            // CORRECCIÓN CLAVE AQUÍ: Se añadieron monto_total_a_pagar y monto_cuota_diaria al RETURNING
             'INSERT INTO prestamos (usuario_id, monto_capital, monto_interes, monto_total_a_pagar, plazo_dias, monto_cuota_diaria) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, fecha_inicio, monto_total_a_pagar, monto_cuota_diaria',
             [usuario_id, parsedMontoPrestamo, montoInteresCalculado, montoTotalAPagar, parsedPlazoDias, montoCuotaDiariaCalculado]
         );
@@ -307,8 +296,7 @@ app.post('/api/admin/prestamos', authenticateToken('admin'), async (req, res) =>
         await client.query('COMMIT');
         res.status(201).json({
             message: 'Préstamo y cuotas registradas exitosamente.',
-            // Aseguramos que los valores sean parte del objeto 'prestamo' para el frontend
-            prestamo: prestamoResult.rows[0], // prestamoResult.rows[0] ya incluye los nuevos campos
+            prestamo: prestamoResult.rows[0],
             cuotas: cuotasGeneradas
         });
     } catch (error) {
@@ -320,7 +308,7 @@ app.post('/api/admin/prestamos', authenticateToken('admin'), async (req, res) =>
     }
 });
 
-app.delete('/api/admin/prestamos/:id', authenticateToken('admin'), async (req, res) => { // authenticateToken('admin')
+app.delete('/api/admin/prestamos/:id', authenticateToken('admin'), async (req, res) => {
     const { id } = req.params;
     const client = await pool.connect();
     try {
@@ -365,7 +353,7 @@ app.delete('/api/admin/prestamos/:id', authenticateToken('admin'), async (req, r
 // ##########################################################################
 // ## RUTA MODIFICADA PARA ENVIAR WHATSAPP TRAS UN PAGO ##
 // ##########################################################################
-app.post('/api/admin/pagar', authenticateToken('admin'), async (req, res) => { // authenticateToken('admin')
+app.post('/api/admin/pagar', authenticateToken('admin'), async (req, res) => {
     const { pago_id, monto_pagado, referencia_pago } = req.body;
 
     if (!pago_id || !monto_pagado) {
@@ -379,7 +367,6 @@ app.post('/api/admin/pagar', authenticateToken('admin'), async (req, res) => { /
     try {
         await client.query('BEGIN');
 
-        // 1. Obtener detalles del pago, del préstamo y del usuario asociado
         const pagoResult = await client.query(
             `SELECT 
                 p.usuario_id, p.monto_cuota, p.monto_pagado, p.prestamo_id,
@@ -400,7 +387,6 @@ app.post('/api/admin/pagar', authenticateToken('admin'), async (req, res) => { /
             return res.status(400).json({ error: 'Esta cuota ya ha sido pagada en su totalidad.' });
         }
 
-        // 2. Actualizar el pago
         let montoRealmentePagadoEnEstaTransaccion = parsedMontoPagado;
         let nuevoMontoPagadoCuota = pago.monto_pagado + parsedMontoPagado;
         if (nuevoMontoPagadoCuota > pago.monto_cuota) {
@@ -414,13 +400,11 @@ app.post('/api/admin/pagar', authenticateToken('admin'), async (req, res) => { /
             [nuevoMontoPagadoCuota, nuevoEstadoCuota, referencia_pago, pago_id]
         );
 
-        // 3. Actualizar el saldo pendiente total del usuario
         await client.query(
             'UPDATE usuarios SET saldo_pendiente_total = saldo_pendiente_total - $1 WHERE id = $2',
             [montoRealmentePagadoEnEstaTransaccion, pago.usuario_id]
         );
 
-        // 4. ¡NUEVO! Enviar confirmación por WhatsApp
         if (pago.telefono_whatsapp) {
             const mensajeWhatsApp = `Hola ${pago.nombre_completo}, confirmamos tu pago de $${montoRealmentePagadoEnEstaTransaccion.toFixed(2)} MXN. ¡Gracias!\n\nReferencia: ${referencia_pago || 'N/A'}`;
             try {
@@ -448,7 +432,7 @@ app.post('/api/admin/pagar', authenticateToken('admin'), async (req, res) => { /
 
 
 // Obtener todos los usuarios (para el admin)
-app.get('/api/admin/usuarios', authenticateToken('admin'), async (req, res) => { // authenticateToken('admin')
+app.get('/api/admin/usuarios', authenticateToken('admin'), async (req, res) => {
     try {
         const result = await pool.query('SELECT id, nombre_completo, telefono_whatsapp, saldo_pendiente_total, activo, fecha_creacion FROM usuarios ORDER BY fecha_creacion DESC');
         res.json(result.rows);
@@ -459,7 +443,7 @@ app.get('/api/admin/usuarios', authenticateToken('admin'), async (req, res) => {
 });
 
 // Obtener pagos de un usuario específico (para el admin)
-app.get('/api/admin/pagos/:userId', authenticateToken('admin'), async (req, res) => { // authenticateToken('admin')
+app.get('/api/admin/pagos/:userId', authenticateToken('admin'), async (req, res) => {
     const { userId } = req.params;
     try {
         const result = await pool.query(
@@ -474,7 +458,7 @@ app.get('/api/admin/pagos/:userId', authenticateToken('admin'), async (req, res)
 });
 
 // Obtener todos los préstamos (para el admin)
-app.get('/api/admin/prestamos', authenticateToken('admin'), async (req, res) => { // authenticateToken('admin')
+app.get('/api/admin/prestamos', authenticateToken('admin'), async (req, res) => {
     try {
         const result = await pool.query(
             'SELECT p.*, u.nombre_completo, u.telefono_whatsapp FROM prestamos p JOIN usuarios u ON p.usuario_id = u.id ORDER BY p.fecha_creacion DESC'
