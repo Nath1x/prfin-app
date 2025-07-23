@@ -611,7 +611,8 @@ function AdminDashboard() {
                         <tbody>
                             {loans.map((loan) => (
                                 <tr key={loan.id} className="hover:bg-gray-50">
-                                    <td className="py-2 px-4 border-b text-sm">{loan.id.substring(0, 8)}...</td>
+                                    {/* CORRECCIÓN CLAVE AQUÍ: Quitando .substring() */}
+                                    <td className="py-2 px-4 border-b text-sm">{loan.id}</td>
                                     <td className="py-2 px-4 border-b">{loan.nombre_completo}</td>
                                     <td className="py-2 px-4 border-b">${Number(loan.monto_capital || 0).toFixed(2)}</td>
                                     <td className="py-2 px-4 border-b">${Number(loan.monto_total_a_pagar || 0).toFixed(2)}</td>
@@ -646,6 +647,7 @@ function AdminDashboard() {
               <table className="min-w-full bg-white border border-gray-200">
                 <thead>
                   <tr>
+                    <th className="py-2 px-4 border-b text-left text-gray-600">ID Usuario</th> {/* Añadí esta columna para el ID */}
                     <th className="py-2 px-4 border-b text-left text-gray-600">Nombre</th>
                     <th className="py-2 px-4 border-b text-left text-gray-600">Teléfono</th>
                     <th className="py-2 px-4 border-b text-left text-gray-600">Saldo Pendiente</th>
@@ -656,6 +658,8 @@ function AdminDashboard() {
                 <tbody>
                   {users.map((user) => (
                     <tr key={user.id} className="hover:bg-gray-50">
+                      {/* CORRECCIÓN CLAVE AQUÍ: Quitando .substring() */}
+                      <td className="py-2 px-4 border-b">{user.id}</td>
                       <td className="py-2 px-4 border-b">{user.nombre_completo}</td>
                       <td className="py-2 px-4 border-b">{user.telefono_whatsapp}</td>
                       {/* Modificación clave aquí para manejar saldo_pendiente_total */}
