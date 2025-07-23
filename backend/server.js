@@ -163,7 +163,7 @@ app.post('/api/login', async (req, res) => {
     }
     try {
         const result = await pool.query(
-            'SELECT id, nombre_completo, telefono_whatsapp, password_hash, rol FROM usuarios WHERE telefono_whatsapp = $1', // ¡CORREGIDO! Añadimos 'rol' aquí
+            'SELECT id, nombre_completo, telefono_whatsapp, password_hash, rol FROM usuarios WHERE telefono_whatsapp = $1',
             [telefono_whatsapp]
         );
         const user = result.rows[0];
@@ -175,7 +175,7 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ error: 'Credenciales inválidas.' });
         }
         const token = jwt.sign(
-            { id: user.id, telefono_whatsapp: user.telefono_whatsapp, nombre_completo: user.nombre_completo, rol: user.rol }, // ¡CORREGIDO! Añadimos 'rol' al token
+            { id: user.id, telefono_whatsapp: user.telefono_whatsapp, nombre_completo: user.nombre_completo, rol: user.rol },
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );
@@ -189,7 +189,7 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/me', authenticateToken(), async (req, res) => {
     try {
         const result = await pool.query(
-            'SELECT id, nombre_completo, telefono_whatsapp, saldo_pendiente_total, activo, rol FROM usuarios WHERE id = $1', // ¡CORREGIDO! Añadimos 'rol' aquí
+            'SELECT id, nombre_completo, telefono_whatsapp, saldo_pendiente_total, activo, rol FROM usuarios WHERE id = $1',
             [req.user.id]
         );
         const user = result.rows[0];
