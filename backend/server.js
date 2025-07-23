@@ -107,6 +107,7 @@ app.post('/api/test-whatsapp', authenticateToken, async (req, res) => {
 });
 
 // --- RUTAS DE AUTENTICACIÓN Y USUARIOS ---
+// ... (código existente para /api/register y /api/login) ...
 
 app.post('/api/register', async (req, res) => {
     const { nombre_completo, telefono_whatsapp, password } = req.body;
@@ -210,7 +211,8 @@ app.post('/api/admin/prestamos', authenticateToken, async (req, res) => {
     try {
         await client.query('BEGIN');
         const prestamoResult = await client.query(
-            'INSERT INTO prestamos (usuario_id, monto_capital, monto_interes, monto_total_a_pagar, plazo_dias, monto_cuota_diaria) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, fecha_inicio',
+            // CORRECCIÓN CLAVE AQUÍ: Se añadieron monto_total_a_pagar y monto_cuota_diaria al RETURNING
+            'INSERT INTO prestamos (usuario_id, monto_capital, monto_interes, monto_total_a_pagar, plazo_dias, monto_cuota_diaria) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, fecha_inicio, monto_total_a_pagar, monto_cuota_diaria',
             [usuario_id, parsedMontoPrestamo, montoInteresCalculado, montoTotalAPagar, parsedPlazoDias, montoCuotaDiariaCalculado]
         );
         const prestamoId = prestamoResult.rows[0].id;
@@ -234,7 +236,8 @@ app.post('/api/admin/prestamos', authenticateToken, async (req, res) => {
         await client.query('COMMIT');
         res.status(201).json({
             message: 'Préstamo y cuotas registradas exitosamente.',
-            prestamo: prestamoResult.rows[0],
+            // Aseguramos que los valores sean parte del objeto 'prestamo' para el frontend
+            prestamo: prestamoResult.rows[0], // prestamoResult.rows[0] ya incluye los nuevos campos
             cuotas: cuotasGeneradas
         });
     } catch (error) {
