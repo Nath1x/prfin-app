@@ -20,20 +20,21 @@ function AdminDashboard() {
   const [registerError, setRegisterError] = useState('');
 
   // Estado para el formulario de nuevo préstamo
-  const [selectedUserId, setSelectedUserId] = useState('');
-  const [montoPrestamo, setMontoPrestamo] = useState('');
-  const [plazoDias, setPlazoDias] = useState('');
+   const [selectedUserId, setSelectedUserId] = useState('');
+   const [montoPrestamo, setMontoPrestamo] = useState('');
+   const [plazoDias, setPlazoDias] = useState('');
   const [loanMessage, setLoanMessage] = useState('');
-  const [loanError, setLoanError] = '';
+  const [loanError, setLoanError] = useState('');
 
   // ESTADOS para el formulario de registro de pago
-  const [selectedUserForPayment, setSelectedUserForPayment] = useState('');
-  const [userPaymentsToRegister, setUserPaymentsToRegister] = useState([]); 
-  const [selectedPaymentId, setSelectedPaymentId] = useState('');
-  const [paymentAmount, setPaymentAmount] = useState('');
-  const [paymentRef, setPaymentRef] = '';
-  const [paymentMessage, setPaymentMessage] = useState('');
-  const [paymentError, setPaymentError] = '';
+   const [selectedUserForPayment, setSelectedUserForPayment] = useState('');
+   const [userPaymentsToRegister, setUserPaymentsToRegister] = useState([]); 
+   const [selectedPaymentId, setSelectedPaymentId] = useState('');
+   const [paymentAmount, setPaymentAmount] = useState('');
+   const [paymentRef, setPaymentRef] = useState('');
+   const [paymentMessage, setPaymentMessage] = useState('');
+   const [paymentError, setPaymentError] = useState('');
+
 
   // ESTADOS para listar y gestionar préstamos
   const [loans, setLoans] = useState([]);
