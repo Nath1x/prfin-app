@@ -1,34 +1,20 @@
-import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import './App.css'; // Asegúrate de importar los estilos
+// frontend/src/App.jsx
+import React from 'react';
+import { Link } from 'react-router-dom';
+import './App.css'; // Puedes personalizar estilos aquí
 
 function App() {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    // Aquí podrías verificar si el usuario ya está autenticado
-  }, []);
-
   return (
-    <BrowserRouter>
-      <div className="app-wrapper">
-        <Routes>
-          {!user ? (
-            <Route
-              path="/"
-              element={<Login setUser={setUser} className="login-effect" />}
-            />
-          ) : (
-            <Route
-              path="/dashboard"
-              element={<Dashboard user={user} />}
-            />
-          )}
-        </Routes>
-      </div>
-    </BrowserRouter>
+    <div className="flex flex-col items-center justify-center h-screen bg-white text-center px-4">
+      <h1 className="text-4xl font-bold mb-6">Bienvenido a PRFIN</h1>
+      <p className="text-lg mb-8">Gestiona tus préstamos de forma simple y segura.</p>
+      <Link
+        to="/login"
+        className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition"
+      >
+        Iniciar sesión
+      </Link>
+    </div>
   );
 }
 
