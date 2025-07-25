@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './App.css';
-import { DollarSign, CalendarDays, TrendingUp } from 'lucide-react';
 
 function App() {
-  const [amount, setAmount] = useState(1000);
+  const [amount, setAmount] = useState(10000);
   const interestRate = 0.32;
   const days = 22;
 
@@ -12,53 +11,52 @@ function App() {
   const dailyPayment = totalToPay / days;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0e0e0e] to-[#1f1f1f] text-white flex flex-col items-center justify-center px-4 py-10">
-      <div className="text-center max-w-xl animate-fade-slide">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight animate-fade-delay">
-          Bienvenido a <span className="text-[#38bdf8]">PRFIN</span>
+    <div className="min-h-screen flex flex-col md:flex-row items-center justify-center bg-gradient-to-br from-[#0a0a23] to-[#0f0f33] text-white p-8 relative overflow-hidden">
+      {/* fondo radial */}
+      <div className="absolute w-[600px] h-[600px] bg-[#3b82f6] opacity-20 rounded-full blur-3xl left-[-150px] top-[-150px] animate-pulse"></div>
+      <div className="absolute w-[400px] h-[400px] bg-[#e11d48] opacity-20 rounded-full blur-2xl right-[-100px] bottom-[-100px] animate-pulse"></div>
+
+      {/* Columna izquierda */}
+      <div className="w-full md:w-1/2 z-10 text-left space-y-8">
+        <h1 className="text-4xl md:text-6xl font-extrabold leading-tight">
+          PRÉSTAMOS <br /> INMEDIATOS,<br /> CONFIABLES<br /> Y SEGUROS
         </h1>
-        <p className="text-lg text-gray-400 mb-6 animate-fade-delay-2">
-          Administra préstamos con precisión, control y confianza.
-        </p>
         <Link
           to="/login"
-          className="bg-[#38bdf8] hover:bg-[#0ea5e9] text-white font-semibold px-8 py-3 rounded-xl shadow-lg transition-all duration-300 animate-fade-delay-3"
+          className="inline-block bg-gradient-to-r from-pink-500 to-indigo-500 text-white px-6 py-3 rounded-full font-semibold text-lg shadow-lg transition hover:scale-105"
         >
-          Iniciar sesión
+          Acceso
         </Link>
       </div>
 
-      {/* Calculadora futurista */}
-      <div className="w-full max-w-md bg-[#121212] mt-12 p-6 rounded-2xl shadow-xl border border-gray-800 animate-fade-slide">
-        <h2 className="text-2xl font-semibold mb-6 text-[#38bdf8] flex items-center gap-2">
-          <DollarSign className="w-5 h-5 text-[#38bdf8]" /> Calculadora de préstamo
-        </h2>
+      {/* Columna derecha */}
+      <div className="w-full md:w-1/2 mt-12 md:mt-0 z-10">
+        <div className="bg-[#141427]/60 backdrop-blur-md rounded-2xl shadow-xl p-6 max-w-md mx-auto border border-[#333] animate-fade-slide">
+          <h2 className="text-xl font-semibold mb-4 text-center">Calcula tu préstamo a 22 días</h2>
 
-        <label className="block text-sm text-gray-400 mb-1 flex items-center gap-2">
-          <DollarSign className="w-4 h-4" /> Monto ($1,000 a $15,000):
-        </label>
-        <input
-          type="range"
-          min="1000"
-          max="15000"
-          step="100"
-          value={amount}
-          onChange={(e) => setAmount(Number(e.target.value))}
-          className="w-full mb-2 accent-[#38bdf8]"
-        />
-        <div className="text-right text-sm text-[#38bdf8] mb-4 font-semibold">
-          ${amount.toLocaleString()}
-        </div>
+          <input
+            type="range"
+            min="1000"
+            max="15000"
+            step="100"
+            value={amount}
+            onChange={(e) => setAmount(Number(e.target.value))}
+            className="w-full accent-[#6366f1] mb-2"
+          />
 
-        <div className="text-sm text-gray-300 space-y-2">
-          <p className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-green-400" />
-            Total a pagar (32% de interés): <span className="text-white font-bold">${totalToPay.toFixed(2)}</span>
-          </p>
-          <p className="flex items-center gap-2">
-            <CalendarDays className="w-4 h-4 text-yellow-400" />
-            Pago diario por 22 días: <span className="text-white font-bold">${dailyPayment.toFixed(2)}</span>
-          </p>
+          <div className="flex justify-between text-sm text-gray-400 mb-4">
+            <span>$1,000</span>
+            <span>$15,000</span>
+          </div>
+
+          <div className="text-center space-y-2">
+            <p className="text-lg text-purple-400 font-bold">
+              Total a pagar: ${totalToPay.toLocaleString()}
+            </p>
+            <p className="text-lg text-pink-500 font-bold">
+              Pago diario: ${dailyPayment.toFixed(2)}
+            </p>
+          </div>
         </div>
       </div>
     </div>
