@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './App.css';
+import { DollarSign, CalendarDays, TrendingUp } from 'lucide-react';
 
 function App() {
   const [amount, setAmount] = useState(1000);
@@ -29,20 +30,35 @@ function App() {
 
       {/* Calculadora futurista */}
       <div className="w-full max-w-md bg-[#121212] mt-12 p-6 rounded-2xl shadow-xl border border-gray-800 animate-fade-slide">
-        <h2 className="text-2xl font-semibold mb-4 text-[#38bdf8]">Calculadora de préstamo</h2>
-        <label className="block text-sm text-gray-400 mb-2">Ingresa el monto ($1,000 a $15,000):</label>
+        <h2 className="text-2xl font-semibold mb-6 text-[#38bdf8] flex items-center gap-2">
+          <DollarSign className="w-5 h-5 text-[#38bdf8]" /> Calculadora de préstamo
+        </h2>
+
+        <label className="block text-sm text-gray-400 mb-1 flex items-center gap-2">
+          <DollarSign className="w-4 h-4" /> Monto ($1,000 a $15,000):
+        </label>
         <input
-          type="number"
+          type="range"
           min="1000"
           max="15000"
+          step="100"
           value={amount}
           onChange={(e) => setAmount(Number(e.target.value))}
-          className="w-full p-3 rounded-lg bg-[#1e1e1e] border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-[#38bdf8] mb-4"
+          className="w-full mb-2 accent-[#38bdf8]"
         />
+        <div className="text-right text-sm text-[#38bdf8] mb-4 font-semibold">
+          ${amount.toLocaleString()}
+        </div>
 
-        <div className="text-sm text-gray-300">
-          <p>Total a pagar (con 32% de interés): <span className="text-white font-bold">${totalToPay.toFixed(2)}</span></p>
-          <p>Pago diario durante 22 días: <span className="text-white font-bold">${dailyPayment.toFixed(2)}</span></p>
+        <div className="text-sm text-gray-300 space-y-2">
+          <p className="flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-green-400" />
+            Total a pagar (32% de interés): <span className="text-white font-bold">${totalToPay.toFixed(2)}</span>
+          </p>
+          <p className="flex items-center gap-2">
+            <CalendarDays className="w-4 h-4 text-yellow-400" />
+            Pago diario por 22 días: <span className="text-white font-bold">${dailyPayment.toFixed(2)}</span>
+          </p>
         </div>
       </div>
     </div>
