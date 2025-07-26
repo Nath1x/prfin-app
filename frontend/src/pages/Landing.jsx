@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import './App.css';
 
 function Landing() {
   const [amount, setAmount] = useState(1000);
@@ -31,16 +30,16 @@ function Landing() {
       {/* Iconos con texto y animaciones */}
       <div className="flex justify-center gap-12 mt-6 animate-fade-in">
         <div className="flex flex-col items-center">
-          <div className="w-10 h-10 mb-2 animate-lightning text-blue-400">⚡</div>
-          <span className="text-sm text-gray-300">Rapidez</span>
+          <div className="text-3xl animate-lightning text-blue-400">⚡</div>
+          <span className="text-sm text-gray-300 mt-1">Rapidez</span>
         </div>
         <div className="flex flex-col items-center">
-          <div className="w-10 h-10 mb-2 animate-spin text-cyan-300">💰</div>
-          <span className="text-sm text-gray-300">Tasas claras</span>
+          <div className="text-3xl animate-spin text-cyan-300">💰</div>
+          <span className="text-sm text-gray-300 mt-1">Tasas claras</span>
         </div>
         <div className="flex flex-col items-center">
-          <div className="w-10 h-10 mb-2 animate-shield text-blue-300">🛡</div>
-          <span className="text-sm text-gray-300">Seguridad</span>
+          <div className="text-3xl animate-shield text-blue-300">🛡</div>
+          <span className="text-sm text-gray-300 mt-1">Seguridad</span>
         </div>
       </div>
 
@@ -94,6 +93,17 @@ function Landing() {
         }
         .animate-shield {
           animation: shield 1.6s ease-in-out infinite;
+        }
+
+        .animate-fade-in {
+          animation: fadeIn 1s ease forwards;
+          opacity: 0;
+        }
+
+        @keyframes fadeIn {
+          to {
+            opacity: 1;
+          }
         }
       `}</style>
     </div>
