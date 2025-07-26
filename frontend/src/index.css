@@ -1,0 +1,15 @@
+@keyframes shine {
+  0% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(2.3);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
+.animate-shine {
+  animation: shine 2s infinite;
+}
