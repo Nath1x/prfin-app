@@ -1,11 +1,10 @@
-import { useState, useCallback } from "react";
-import { motion } from "framer-motion";
-import { FaBolt, FaCoins, FaShieldAlt, FaWhatsapp } from "react-icons/fa";
-import { Link } from "react-router-dom";
-import Particles from "react-tsparticles";
-import { loadFull } from "tsparticles-engine";
+import React, { useState, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+import Particles from 'react-tsparticles';
+import { loadSlim } from 'tsparticles-slim';
+import { FaBolt, FaCoins, FaShieldAlt } from 'react-icons/fa';
 
-export default function Landing() {
+function Landing() {
   const [amount, setAmount] = useState(1000);
   const interestRate = 0.32;
   const days = 22;
@@ -13,159 +12,101 @@ export default function Landing() {
   const totalToPay = amount + amount * interestRate;
   const dailyPayment = totalToPay / days;
 
-  const particlesInit = useCallback(async (engine) => {
-    await loadFull(engine);
+  const particlesInit = useCallback(async engine => {
+    await loadSlim(engine);
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f0f1c] via-[#190f22] to-[#0f0f1c] animate-gradient bg-[length:200%_200%] text-white relative overflow-hidden px-4">
+    <div className="relative min-h-screen bg-gradient-to-br from-[#0a0a23] to-[#0f0f33] text-white overflow-hidden">
       {/* Fondo de partículas */}
       <Particles
-        id="tsparticles"
+        className="absolute inset-0 z-0"
         init={particlesInit}
         options={{
+          background: { color: '#0a0a23' },
           fullScreen: { enable: false },
-          background: { color: "transparent" },
           particles: {
             number: { value: 40 },
-            color: { value: "#ffffff" },
-            shape: { type: "circle" },
-            opacity: { value: 0.05 },
-            size: { value: 3 },
-            move: { enable: true, speed: 0.4 },
-          },
+            size: { value: 2 },
+            move: { enable: true, speed: 1 },
+            opacity: { value: 0.3 },
+            color: { value: '#ffffff' },
+            links: { enable: true, color: '#ffffff', distance: 150, opacity: 0.2 }
+          }
         }}
-        className="absolute inset-0 z-0"
       />
 
-      {/* Header */}
-      <div className="relative z-10 w-full flex justify-between items-center py-6 px-4 md:px-8">
-        <h1 className="text-white text-lg font-semibold">prfin.mx</h1>
-        <Link
-          to="/login"
-          className="bg-gradient-to-r from-purple-400 to-pink-500 text-white py-1 px-4 rounded-full shadow-md hover:scale-105 transition"
-        >
-          Acceso
-        </Link>
-      </div>
-
-      {/* Contenido principal */}
-      <div className="relative z-10 flex flex-col items-center text-center mt-20">
-        <h1 className="text-6xl md:text-7xl font-bold leading-tight">
-          Préstamos rápidos <br /> y transparentes
-        </h1>
-        <p className="text-gray-300 mt-6 text-xl md:text-2xl">
-          Todo digital, sin papeles y con tasas claras.
-        </p>
-        <Link
-          to="/login"
-          className="mt-10 bg-gradient-to-r from-blue-500 to-pink-500 text-white py-4 px-10 rounded-full text-xl font-medium hover:scale-105 transition"
-        >
-          Ir a Login
-        </Link>
-
-        {/* Íconos animados */}
-        <div className="flex justify-center gap-20 mt-16">
-          <div className="flex flex-col items-center text-white text-xl">
-            <motion.div
-              animate={{ y: [0, -8, 0] }}
-              transition={{ repeat: Infinity, duration: 1 }}
-            >
-              <FaBolt className="text-blue-400 text-5xl" />
-            </motion.div>
-            <span className="mt-3">Rapidez</span>
-          </div>
-
-          <div className="flex flex-col items-center text-white text-xl">
-            <motion.div
-              animate={{ rotate: [0, 360] }}
-              transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
-            >
-              <FaCoins className="text-yellow-400 text-5xl" />
-            </motion.div>
-            <span className="mt-3">Tasas claras</span>
-          </div>
-
-          <div className="flex flex-col items-center text-white text-xl">
-            <motion.div
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ repeat: Infinity, duration: 1.5 }}
-            >
-              <FaShieldAlt className="text-blue-300 text-5xl" />
-            </motion.div>
-            <span className="mt-3">Seguridad</span>
-          </div>
-        </div>
-
-        {/* Calculadora */}
-        <div className="mt-20 bg-[#1a1a2e] p-10 rounded-3xl shadow-lg w-full max-w-xl">
-          <h2 className="text-3xl font-semibold mb-4">Calcula tu pago a 22 días</h2>
-          <p className="text-left text-lg mb-2">
-            Monto seleccionado: ${amount.toLocaleString()}
+      {/* Contenido */}
+      <div className="relative z-10 flex flex-col items-center justify-center md:flex-row min-h-screen px-6 py-12">
+        {/* Columna izquierda */}
+        <div className="md:w-1/2 text-center md:text-left space-y-8">
+          <h1 className="text-5xl md:text-6xl font-extrabold leading-tight">
+            Préstamos rápidos <br /> y transparentes
+          </h1>
+          <p className="text-lg text-gray-300">
+            Todo digital, sin papeles y con tasas claras.
           </p>
-          <input
-            type="range"
-            min="1000"
-            max="15000"
-            step="1000"
-            value={amount}
-            onChange={(e) => setAmount(Number(e.target.value))}
-            className="w-full accent-pink-500 transition-all duration-300"
-          />
-          <div className="flex justify-between text-lg mt-1">
-            <span>$1,000</span>
-            <span>$15,000</span>
-          </div>
-          <div className="mt-6 text-2xl">
-            <p>
-              <span className="text-pink-400 font-semibold">
-                Total a pagar: ${totalToPay.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </span>
-            </p>
-            <p>
-              <span className="text-pink-500 font-semibold">
-                Pago diario: ${dailyPayment.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </span>
-            </p>
+          <Link
+            to="/login"
+            className="inline-block bg-gradient-to-r from-pink-500 to-indigo-500 text-white px-6 py-3 rounded-full font-semibold text-lg shadow-lg transition hover:scale-105"
+          >
+            Ir a Login
+          </Link>
+
+          {/* Íconos */}
+          <div className="mt-10 flex justify-center md:justify-start space-x-10 text-center text-sm">
+            <div className="flex flex-col items-center">
+              <FaBolt className="text-blue-400 text-3xl animate-bounce" />
+              <span className="mt-1">Rapidez</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <FaCoins className="text-yellow-400 text-3xl animate-spin-slow" />
+              <span className="mt-1">Tasas claras</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <FaShieldAlt className="text-cyan-400 text-3xl animate-pulse" />
+              <span className="mt-1">Seguridad</span>
+            </div>
           </div>
         </div>
 
-        {/* Beneficios extra */}
-        <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl">
-          <div className="bg-[#1a1a2e] p-8 rounded-xl shadow-md text-left">
-            <h3 className="text-xl font-bold text-white">Sin papeleo</h3>
-            <p className="text-gray-400 mt-2">Todo 100% digital desde tu celular.</p>
-          </div>
-          <div className="bg-[#1a1a2e] p-8 rounded-xl shadow-md text-left">
-            <h3 className="text-xl font-bold text-white">Aprobación en minutos</h3>
-            <p className="text-gray-400 mt-2">Recibe el dinero el mismo día.</p>
-          </div>
-          <div className="bg-[#1a1a2e] p-8 rounded-xl shadow-md text-left">
-            <h3 className="text-xl font-bold text-white">Tasas claras</h3>
-            <p className="text-gray-400 mt-2">Sin comisiones escondidas.</p>
+        {/* Columna derecha (calculadora) */}
+        <div className="md:w-1/2 mt-12 md:mt-0 flex justify-center">
+          <div className="bg-[#141427]/60 backdrop-blur-lg rounded-2xl shadow-xl p-8 w-full max-w-md border border-[#333]">
+            <h2 className="text-xl font-semibold text-center mb-6">
+              Calcula tu pago a 22 días
+            </h2>
+            <input
+              type="range"
+              min="1000"
+              max="15000"
+              step="1000"
+              value={amount}
+              onChange={(e) => setAmount(Number(e.target.value))}
+              className="w-full accent-pink-500 mb-2"
+            />
+            <p className="text-sm text-center text-gray-300 mb-4">
+              Monto seleccionado: ${amount.toLocaleString()}
+            </p>
+            <div className="text-center space-y-2">
+              <p className="text-lg text-purple-400 font-bold">
+                Total a pagar: ${totalToPay.toLocaleString()}
+              </p>
+              <p className="text-lg text-pink-400 font-bold">
+                Pago diario: ${dailyPayment.toFixed(2)}
+              </p>
+            </div>
           </div>
         </div>
-
-        {/* Footer */}
-        <footer className="mt-20 text-lg text-gray-400">
-          © 2025 prfin.mx ・ Políticas ・ Contacto
-        </footer>
       </div>
 
-      {/* Botón flotante WhatsApp */}
-      <a
-        href="https://wa.me/527822173753?text=Hola,%20me%20interesa%20un%20préstamo%20rápido."
-        target="_blank"
-        className="fixed bottom-4 right-4 z-50 bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-lg transition"
-      >
-        <FaWhatsapp className="text-xl" />
-      </a>
+      {/* Footer */}
+      <footer className="text-center text-sm text-gray-400 py-4 relative z-10">
+        © 2025 prfin.mx · <span className="underline cursor-pointer">Políticas</span> ·{' '}
+        <span className="underline cursor-pointer">Contacto</span>
+      </footer>
     </div>
   );
 }
+
+export default Landing;
