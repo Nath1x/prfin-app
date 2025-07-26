@@ -2,6 +2,9 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { FaBolt, FaCoins, FaShieldAlt, FaWhatsapp } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import Particles from "react-tsparticles";
+import { loadFull } from "tsparticles";
+import { useCallback } from "react";
 
 export default function Landing() {
   const [amount, setAmount] = useState(1000);
@@ -11,10 +14,33 @@ export default function Landing() {
   const totalToPay = amount + amount * interestRate;
   const dailyPayment = totalToPay / days;
 
+  const particlesInit = useCallback(async (engine) => {
+    await loadFull(engine);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f0f1c] via-[#190f22] to-[#0f0f1c] animate-gradient bg-[length:200%_200%] text-white relative overflow-hidden px-4">
+      {/* Fondo de partículas */}
+      <Particles
+        id="tsparticles"
+        init={particlesInit}
+        options={{
+          fullScreen: { enable: false },
+          background: { color: "transparent" },
+          particles: {
+            number: { value: 30 },
+            color: { value: "#ffffff" },
+            shape: { type: "circle" },
+            opacity: { value: 0.1 },
+            size: { value: 3 },
+            move: { enable: true, speed: 0.6 },
+          },
+        }}
+        className="absolute inset-0 z-0"
+      />
+
       {/* Header */}
-      <div className="w-full flex justify-between items-center py-6 px-4 md:px-8">
+      <div className="relative z-10 w-full flex justify-between items-center py-6 px-4 md:px-8">
         <h1 className="text-white text-lg font-semibold">prfin.mx</h1>
         <Link
           to="/login"
@@ -25,7 +51,7 @@ export default function Landing() {
       </div>
 
       {/* Contenido principal */}
-      <div className="flex flex-col items-center text-center mt-16">
+      <div className="relative z-10 flex flex-col items-center text-center mt-16">
         <h1 className="text-5xl md:text-6xl font-bold leading-tight">
           Préstamos rápidos <br /> y transparentes
         </h1>
@@ -135,7 +161,7 @@ export default function Landing() {
 
       {/* Botón flotante WhatsApp */}
       <a
-        href="https://wa.me/527822173753?text=Hola%20PRFIN,%20me%20gustaría%20más%20información%20sobre%20los%20préstamos."
+        href="https://wa.me/52XXXXXXXXXX"
         target="_blank"
         className="fixed bottom-4 right-4 z-50 bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-lg transition"
       >
