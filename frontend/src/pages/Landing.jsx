@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { FaBolt, FaCoins, FaShieldAlt } from "react-icons/fa";
+import { FaBolt, FaCircleDollarToSlot, FaShieldAlt } from "react-icons/fa6";
 import { Link } from "react-router-dom";
 
 export default function Landing() {
@@ -58,7 +58,7 @@ export default function Landing() {
               animate={{ rotate: [0, 360] }}
               transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
             >
-              <FaCoins className="text-yellow-400 text-2xl" />
+              <FaCircleDollarToSlot className="text-yellow-400 text-2xl" />
             </motion.div>
             <span className="mt-2">Tasas claras</span>
           </div>
