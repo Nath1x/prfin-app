@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import './App.css';
 
 function Landing() {
   const [amount, setAmount] = useState(1000);
@@ -9,10 +10,21 @@ function Landing() {
   const dailyPayment = totalToPay / days;
 
   return (
-    <div className="min-h-screen bg-[#0b0b1f] text-white flex flex-col items-center justify-center px-6 py-10 space-y-10 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#0b0b1f] via-[#141427] to-[#0b0b1f] text-white flex flex-col items-center justify-start px-6 py-10 space-y-10 relative overflow-hidden">
+
+      {/* Header */}
+      <header className="absolute top-0 left-0 w-full flex justify-between items-center px-6 py-4 text-white z-50">
+        <span className="text-xl font-bold">prfin.mx</span>
+        <Link
+          to="/login"
+          className="text-sm font-medium text-blue-400 hover:underline"
+        >
+          Ir a Login
+        </Link>
+      </header>
 
       {/* Encabezado */}
-      <h1 className="text-4xl md:text-5xl font-extrabold text-center leading-snug animate-fade-in">
+      <h1 className="text-4xl md:text-5xl font-extrabold text-center leading-snug mt-24 animate-fade-in">
         Préstamos rápidos<br />y transparentes
       </h1>
       <p className="text-center text-gray-400 max-w-md animate-fade-in">
@@ -30,16 +42,16 @@ function Landing() {
       {/* Iconos con texto y animaciones */}
       <div className="flex justify-center gap-12 mt-6 animate-fade-in">
         <div className="flex flex-col items-center">
-          <div className="text-3xl animate-lightning text-blue-400">⚡</div>
-          <span className="text-sm text-gray-300 mt-1">Rapidez</span>
+          <div className="w-10 h-10 mb-2 animate-lightning text-orange-400">⚡</div>
+          <span className="text-sm text-gray-300">Rapidez</span>
         </div>
         <div className="flex flex-col items-center">
-          <div className="text-3xl animate-spin text-cyan-300">💰</div>
-          <span className="text-sm text-gray-300 mt-1">Tasas claras</span>
+          <div className="w-10 h-10 mb-2 animate-spin text-yellow-300">🪙</div>
+          <span className="text-sm text-gray-300">Tasas claras</span>
         </div>
         <div className="flex flex-col items-center">
-          <div className="text-3xl animate-shield text-blue-300">🛡</div>
-          <span className="text-sm text-gray-300 mt-1">Seguridad</span>
+          <div className="w-10 h-10 mb-2 animate-shield text-blue-300">🛡</div>
+          <span className="text-sm text-gray-300">Seguridad</span>
         </div>
       </div>
 
@@ -47,6 +59,9 @@ function Landing() {
       <div className="bg-[#141427]/60 backdrop-blur-md rounded-2xl shadow-xl p-6 w-full max-w-sm mt-8 border border-[#333] animate-fade-in">
         <h2 className="text-lg font-semibold mb-4 text-center">Calcula tu pago a 22 días</h2>
         <label className="text-sm text-gray-400">Monto:</label>
+        <div className="text-center text-pink-300 font-bold text-lg mb-2">
+          ${amount.toLocaleString()}
+        </div>
         <input
           type="range"
           min="1000"
@@ -62,7 +77,7 @@ function Landing() {
         </div>
         <div className="text-center">
           <p className="text-xl text-pink-400 font-bold">
-            Total a pagar: ${totalToPay.toLocaleString()}
+            Total a pagar: ${totalToPay.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
           </p>
           <p className="text-xl text-pink-500 font-bold">
             Pago diario: ${dailyPayment.toFixed(2)}
@@ -93,17 +108,6 @@ function Landing() {
         }
         .animate-shield {
           animation: shield 1.6s ease-in-out infinite;
-        }
-
-        .animate-fade-in {
-          animation: fadeIn 1s ease forwards;
-          opacity: 0;
-        }
-
-        @keyframes fadeIn {
-          to {
-            opacity: 1;
-          }
         }
       `}</style>
     </div>
