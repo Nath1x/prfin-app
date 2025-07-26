@@ -1,117 +1,112 @@
+// src/pages/Landing.jsx
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import './App.css';
+import '../App.css'; // ✅ Ruta corregida
+import { motion } from 'framer-motion';
+import { FaBolt, FaCoins, FaShieldAlt } from 'react-icons/fa';
 
-function Landing() {
+const Landing = () => {
   const [amount, setAmount] = useState(1000);
   const interestRate = 0.32;
   const days = 22;
+
   const totalToPay = amount + amount * interestRate;
   const dailyPayment = totalToPay / days;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0b0b1f] via-[#141427] to-[#0b0b1f] text-white flex flex-col items-center justify-start px-6 py-10 space-y-10 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-[#0f0f23] to-[#150820] text-white relative px-4">
+      {/* Fondo animado */}
+      <motion.div
+        className="absolute top-0 left-0 w-full h-full bg-gradient-radial from-purple-900 via-transparent to-transparent opacity-20"
+        animate={{ scale: [1, 1.5, 1], opacity: [0.3, 0.5, 0.3] }}
+        transition={{ repeat: Infinity, duration: 10 }}
+      />
 
       {/* Header */}
-      <header className="absolute top-0 left-0 w-full flex justify-between items-center px-6 py-4 text-white z-50">
-        <span className="text-xl font-bold">prfin.mx</span>
-        <Link
-          to="/login"
-          className="text-sm font-medium text-blue-400 hover:underline"
+      <header className="flex justify-between items-center py-4 px-6 z-10 relative">
+        <h1 className="text-2xl font-bold text-white">prfin.mx</h1>
+        <a
+          href="/login"
+          className="bg-gradient-to-r from-purple-600 to-pink-500 px-4 py-2 rounded-xl text-white hover:scale-105 transition"
         >
-          Ir a Login
-        </Link>
+          Acceso
+        </a>
       </header>
 
-      {/* Encabezado */}
-      <h1 className="text-4xl md:text-5xl font-extrabold text-center leading-snug mt-24 animate-fade-in">
-        Préstamos rápidos<br />y transparentes
-      </h1>
-      <p className="text-center text-gray-400 max-w-md animate-fade-in">
-        Todo digital, sin papeles y con tasas claras.
-      </p>
+      {/* Contenido central */}
+      <div className="flex flex-col items-center text-center z-10 relative mt-6">
+        <h2 className="text-4xl font-extrabold">Préstamos rápidos<br />y transparentes</h2>
+        <p className="text-gray-300 mt-2">Todo digital, sin papeles y con tasas claras.</p>
+        <a
+          href="/login"
+          className="mt-4 px-6 py-2 bg-gradient-to-r from-blue-600 to-pink-500 text-white rounded-full hover:scale-105 transition"
+        >
+          Ir a Login
+        </a>
 
-      {/* Botón de acceso */}
-      <Link
-        to="/login"
-        className="bg-gradient-to-r from-indigo-500 to-pink-500 text-white px-8 py-3 rounded-full font-semibold shadow-lg hover:scale-105 transition-all animate-fade-in"
-      >
-        Ir a Login
-      </Link>
+        {/* Iconos animados */}
+        <div className="flex justify-center gap-10 mt-10">
+          {/* Rapidez */}
+          <motion.div
+            animate={{ y: [0, -5, 0] }}
+            transition={{ repeat: Infinity, duration: 1 }}
+            className="flex flex-col items-center"
+          >
+            <FaBolt size={28} className="text-blue-500" />
+            <p>Rapidez</p>
+          </motion.div>
 
-      {/* Iconos con texto y animaciones */}
-      <div className="flex justify-center gap-12 mt-6 animate-fade-in">
-        <div className="flex flex-col items-center">
-          <div className="w-10 h-10 mb-2 animate-lightning text-orange-400">⚡</div>
-          <span className="text-sm text-gray-300">Rapidez</span>
+          {/* Tasas claras (moneda girando) */}
+          <motion.div
+            animate={{ rotate: [0, 360] }}
+            transition={{ repeat: Infinity, duration: 4, ease: 'linear' }}
+            className="flex flex-col items-center"
+          >
+            <FaCoins size={28} className="text-yellow-400" />
+            <p>Tasas claras</p>
+          </motion.div>
+
+          {/* Seguridad (escudo golpeado) */}
+          <motion.div
+            animate={{ scale: [1, 1.2, 1], rotate: [0, -5, 5, 0] }}
+            transition={{ repeat: Infinity, duration: 3 }}
+            className="flex flex-col items-center"
+          >
+            <FaShieldAlt size={28} className="text-cyan-400" />
+            <p>Seguridad</p>
+          </motion.div>
         </div>
-        <div className="flex flex-col items-center">
-          <div className="w-10 h-10 mb-2 animate-spin text-yellow-300">🪙</div>
-          <span className="text-sm text-gray-300">Tasas claras</span>
+
+        {/* Calculadora */}
+        <div className="mt-10 w-full max-w-md bg-black/30 rounded-xl p-6 border border-white/10 backdrop-blur">
+          <h3 className="text-lg font-semibold mb-4">Calcula tu pago a 22 días</h3>
+          <label className="block text-left text-sm mb-2">Monto seleccionado: ${amount.toLocaleString()}</label>
+          <input
+            type="range"
+            min={1000}
+            max={15000}
+            step={1000}
+            value={amount}
+            onChange={(e) => setAmount(Number(e.target.value))}
+            className="w-full accent-pink-500"
+          />
+          <div className="flex justify-between text-sm mt-1 text-gray-400">
+            <span>$1,000</span>
+            <span>$15,000</span>
+          </div>
+
+          <div className="mt-6 text-lg font-semibold text-pink-400">
+            <p>Total a pagar: ${totalToPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+            <p className="mt-1 text-pink-500">Pago diario: ${dailyPayment.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+          </div>
         </div>
-        <div className="flex flex-col items-center">
-          <div className="w-10 h-10 mb-2 animate-shield text-blue-300">🛡</div>
-          <span className="text-sm text-gray-300">Seguridad</span>
-        </div>
+
+        {/* Footer */}
+        <footer className="mt-10 text-xs text-gray-400">
+          © 2025 prfin.mx • Políticas • Contacto
+        </footer>
       </div>
-
-      {/* Calculadora */}
-      <div className="bg-[#141427]/60 backdrop-blur-md rounded-2xl shadow-xl p-6 w-full max-w-sm mt-8 border border-[#333] animate-fade-in">
-        <h2 className="text-lg font-semibold mb-4 text-center">Calcula tu pago a 22 días</h2>
-        <label className="text-sm text-gray-400">Monto:</label>
-        <div className="text-center text-pink-300 font-bold text-lg mb-2">
-          ${amount.toLocaleString()}
-        </div>
-        <input
-          type="range"
-          min="1000"
-          max="15000"
-          step="1000"
-          value={amount}
-          onChange={(e) => setAmount(Number(e.target.value))}
-          className="w-full accent-pink-500 my-2"
-        />
-        <div className="flex justify-between text-xs text-gray-500 mb-4">
-          <span>$1,000</span>
-          <span>$15,000</span>
-        </div>
-        <div className="text-center">
-          <p className="text-xl text-pink-400 font-bold">
-            Total a pagar: ${totalToPay.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-          </p>
-          <p className="text-xl text-pink-500 font-bold">
-            Pago diario: ${dailyPayment.toFixed(2)}
-          </p>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <footer className="text-xs text-gray-500 mt-10 text-center animate-fade-in">
-        © 2025 prfin.mx &nbsp; • &nbsp; Políticas &nbsp; • &nbsp; Contacto
-      </footer>
-
-      {/* Animaciones personalizadas */}
-      <style>{`
-        @keyframes lightning {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(8px); }
-        }
-        .animate-lightning {
-          animation: lightning 0.6s infinite;
-        }
-
-        @keyframes shield {
-          0% { transform: scale(1); }
-          40% { transform: scale(1.1) rotate(1deg); }
-          60% { transform: scale(0.98) rotate(-1deg); }
-          100% { transform: scale(1); }
-        }
-        .animate-shield {
-          animation: shield 1.6s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
-}
+};
 
 export default Landing;
