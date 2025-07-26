@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { FaBolt, FaDollarSign, FaShieldAlt } from "react-icons/fa";
+import { FaBolt, FaCoins, FaShieldAlt } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
 export default function Landing() {
@@ -12,7 +12,7 @@ export default function Landing() {
   const dailyPayment = totalToPay / days;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0f0f1c] to-[#190f22] text-white relative overflow-hidden px-4">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-[#0f0f1c] via-[#190f22] to-[#0f0f1c] text-white relative overflow-hidden px-4">
       {/* Header */}
       <div className="w-full flex justify-between items-center py-6 px-4 md:px-8">
         <h1 className="text-white text-lg font-semibold">prfin.mx</h1>
@@ -25,60 +25,62 @@ export default function Landing() {
       </div>
 
       {/* Contenido principal */}
-      <div className="flex flex-col items-center text-center mt-10">
-        <h1 className="text-4xl md:text-5xl font-bold leading-tight">
+      <div className="flex flex-col items-center text-center mt-16">
+        <h1 className="text-5xl md:text-6xl font-bold leading-tight">
           Préstamos rápidos <br /> y transparentes
         </h1>
-        <p className="text-gray-300 mt-4 text-lg">
+        <p className="text-gray-300 mt-6 text-xl">
           Todo digital, sin papeles y con tasas claras.
         </p>
         <Link
           to="/login"
-          className="mt-6 bg-gradient-to-r from-blue-500 to-pink-500 text-white py-2 px-6 rounded-full text-lg font-medium hover:scale-105 transition"
+          className="mt-8 bg-gradient-to-r from-blue-500 to-pink-500 text-white py-3 px-8 rounded-full text-lg font-medium hover:scale-105 transition"
         >
           Ir a Login
         </Link>
 
         {/* Íconos animados */}
-        <div className="flex justify-center gap-10 mt-8">
+        <div className="flex justify-center gap-16 mt-12">
           {/* Icono de rapidez */}
-          <div className="flex flex-col items-center text-white">
+          <div className="flex flex-col items-center text-white text-xl">
             <motion.div
-              animate={{ y: [0, -5, 0] }}
+              animate={{ y: [0, -8, 0] }}
               transition={{ repeat: Infinity, duration: 1 }}
             >
-              <FaBolt className="text-blue-400 text-2xl" />
+              <FaBolt className="text-blue-400 text-4xl" />
             </motion.div>
-            <span className="mt-2">Rapidez</span>
+            <span className="mt-3">Rapidez</span>
           </div>
 
           {/* Icono de tasas claras */}
-          <div className="flex flex-col items-center text-white">
+          <div className="flex flex-col items-center text-white text-xl">
             <motion.div
               animate={{ rotate: [0, 360] }}
               transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
             >
-              <FaDollarSign className="text-yellow-400 text-2xl" />
+              <FaCoins className="text-yellow-400 text-4xl" />
             </motion.div>
-            <span className="mt-2">Tasas claras</span>
+            <span className="mt-3">Tasas claras</span>
           </div>
 
           {/* Icono de seguridad */}
-          <div className="flex flex-col items-center text-white">
+          <div className="flex flex-col items-center text-white text-xl">
             <motion.div
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ repeat: Infinity, duration: 1.5 }}
             >
-              <FaShieldAlt className="text-blue-300 text-2xl" />
+              <FaShieldAlt className="text-blue-300 text-4xl" />
             </motion.div>
-            <span className="mt-2">Seguridad</span>
+            <span className="mt-3">Seguridad</span>
           </div>
         </div>
 
         {/* Calculadora */}
-        <div className="mt-10 bg-[#1a1a2e] p-6 rounded-xl shadow-lg w-full max-w-md">
-          <h2 className="text-xl font-semibold mb-4">Calcula tu pago a 22 días</h2>
-          <p className="text-left text-sm mb-2">Monto seleccionado: ${amount.toLocaleString()}</p>
+        <div className="mt-16 bg-[#1a1a2e] p-8 rounded-2xl shadow-lg w-full max-w-xl">
+          <h2 className="text-2xl font-semibold mb-4">Calcula tu pago a 22 días</h2>
+          <p className="text-left text-base mb-2">
+            Monto seleccionado: ${amount.toLocaleString()}
+          </p>
           <input
             type="range"
             min="1000"
@@ -88,26 +90,32 @@ export default function Landing() {
             onChange={(e) => setAmount(Number(e.target.value))}
             className="w-full accent-pink-500"
           />
-          <div className="flex justify-between text-sm mt-1">
+          <div className="flex justify-between text-base mt-1">
             <span>$1,000</span>
             <span>$15,000</span>
           </div>
-          <div className="mt-4 text-lg">
+          <div className="mt-6 text-xl">
             <p>
               <span className="text-pink-400 font-semibold">
-                Total a pagar: ${totalToPay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                Total a pagar: ${totalToPay.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </span>
             </p>
             <p>
               <span className="text-pink-500 font-semibold">
-                Pago diario: ${dailyPayment.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                Pago diario: ${dailyPayment.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </span>
             </p>
           </div>
         </div>
 
         {/* Footer */}
-        <footer className="mt-10 text-sm text-gray-400">
+        <footer className="mt-16 text-base text-gray-400">
           © 2025 prfin.mx ・ Políticas ・ Contacto
         </footer>
       </div>
