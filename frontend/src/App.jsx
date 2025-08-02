@@ -44,7 +44,7 @@ const App = () => {
                     </div>
                     <div className="lg:flex lg:flex-1 lg:justify-end">
                         <Link to="/login" className="text-sm font-semibold leading-6 text-gray-900 hover:text-indigo-600">
-                            Iniciar Sesión <span aria-hidden="true">&rarr;</span>
+                            Revisar mi estado de cuenta <span aria-hidden="true">&rarr;</span>
                         </Link>
                     </div>
                 </nav>
@@ -61,28 +61,28 @@ const App = () => {
                             <div className="grid grid-cols-1 items-center gap-x-8 gap-y-16 lg:grid-cols-2">
                                 {/* Contenido de texto a la izquierda */}
                                 <div className="text-center lg:text-left">
-                                    <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">Control total de tu operación de préstamos</h1>
-                                    <p className="mt-6 text-lg leading-8 text-gray-600">Centraliza tu información, automatiza la cobranza y optimiza los resultados de tu equipo en tiempo real.</p>
+                                    <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">Tu préstamo, rápido y sin complicaciones</h1>
+                                    <p className="mt-6 text-lg leading-8 text-gray-600">Obtén el dinero que necesitas con un proceso 100% digital, transparente y con respuesta en minutos. Sin filas, sin papeleo.</p>
                                     <div className="mt-10 flex items-center justify-center gap-x-6 lg:justify-start">
-                                        <Link to="/login" className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Acceder al Panel</Link>
-                                        <a href="#features" className="text-sm font-semibold leading-6 text-gray-900">¿Cómo funciona? <span aria-hidden="true">→</span></a>
+                                        <Link to="/login" className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Solicita tu Préstamo</Link>
+                                        <a href="#features" className="text-sm font-semibold leading-6 text-gray-900">Conoce los beneficios <span aria-hidden="true">→</span></a>
                                     </div>
                                 </div>
                                 {/* Calculadora a la derecha */}
                                 <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
-                                    <h2 className="text-2xl font-semibold text-gray-800 mb-4">Simulador de Préstamos</h2>
+                                    <h2 className="text-2xl font-semibold text-gray-800 mb-4">Simula tu préstamo</h2>
                                     <div className="space-y-4">
                                         <div>
-                                            <label htmlFor="monto" className="block text-sm font-medium text-gray-700">Monto solicitado (MXN)</label>
+                                            <label htmlFor="monto" className="block text-sm font-medium text-gray-700">¿Cuánto necesitas? (MXN)</label>
                                             <div className="relative mt-1 rounded-md shadow-sm">
                                                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><span className="text-gray-500 sm:text-sm">$</span></div>
                                                 <input type="number" id="monto" value={monto} onChange={(e) => setMonto(e.target.value)} className="block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="1000" />
                                             </div>
                                         </div>
                                         <div className="bg-gray-50 p-4 rounded-lg text-center space-y-2">
-                                            <p className="text-sm text-gray-600">Pago diario estimado</p>
+                                            <p className="text-sm text-gray-600">Tu pago diario sería de</p>
                                             <p className="text-3xl font-bold text-indigo-600">${pagoDiario}</p>
-                                            <p className="text-xs text-gray-500">Total a pagar: ${totalPagar}</p>
+                                            <p className="text-xs text-gray-500">Monto total a pagar en 29 días: ${totalPagar}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -95,26 +95,26 @@ const App = () => {
                 <div id="features" className="bg-white py-24 sm:py-32">
                     <div className="mx-auto max-w-7xl px-6 lg:px-8">
                         <div className="mx-auto max-w-2xl lg:text-center">
-                            <h2 className="text-base font-semibold leading-7 text-indigo-600">Hecho para tu equipo</h2>
-                            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Herramientas diseñadas para maximizar la productividad</p>
+                            <h2 className="text-base font-semibold leading-7 text-indigo-600">Beneficios para ti</h2>
+                            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Un proceso diseñado para tu comodidad</p>
                         </div>
                         <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-4xl">
                             <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-10 lg:max-w-none lg:grid-cols-2 lg:gap-y-16">
                                 <div className="relative pl-16">
                                     <dt className="text-base font-semibold leading-7 text-gray-900">
                                         <FeatureIcon>
-                                            <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v-.003" /></svg>
-                                        </FeatureIcon>Panel de Control Unificado
+                                            <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                        </FeatureIcon>Respuesta Rápida
                                     </dt>
-                                    <dd className="mt-2 text-base leading-7 text-gray-600">Visualiza y administra toda tu cartera de clientes, préstamos y pagos. Ten visibilidad completa del negocio desde un solo lugar.</dd>
+                                    <dd className="mt-2 text-base leading-7 text-gray-600">Completa tu solicitud en minutos y recibe una respuesta el mismo día. Valoramos tu tiempo.</dd>
                                 </div>
                                 <div className="relative pl-16">
                                     <dt className="text-base font-semibold leading-7 text-gray-900">
                                         <FeatureIcon>
-                                            <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" /></svg>
-                                        </FeatureIcon>Cobranza Automatizada
+                                            <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
+                                        </FeatureIcon>Términos Claros
                                     </dt>
-                                    <dd className="mt-2 text-base leading-7 text-gray-600">Reduce el esfuerzo manual. El sistema envía recordatorios de pago y confirmaciones por WhatsApp para mantener tu cartera al día.</dd>
+                                    <dd className="mt-2 text-base leading-7 text-gray-600">Sin letras pequeñas ni sorpresas. Sabrás exactamente cuánto pagarás desde el primer momento.</dd>
                                 </div>
                             </dl>
                         </div>
@@ -125,40 +125,40 @@ const App = () => {
                 <section className="bg-gray-50 py-24 sm:py-32">
                     <div className="mx-auto max-w-7xl px-6 lg:px-8">
                         <div className="mx-auto max-w-xl text-center">
-                            <h2 className="text-lg font-semibold leading-8 tracking-tight text-indigo-600">Testimonios</h2>
-                            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Lo que nuestros clientes dicen</p>
+                            <h2 className="text-lg font-semibold leading-8 tracking-tight text-indigo-600">Confianza y Satisfacción</h2>
+                            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">La experiencia de nuestros clientes</p>
                         </div>
                         <div className="mx-auto mt-16 flow-root max-w-2xl sm:mt-20 lg:mx-0 lg:max-w-none">
                             <div className="-mt-8 sm:-mx-4 sm:columns-2 sm:text-[0] lg:columns-3">
                                 <div className="pt-8 sm:inline-block sm:w-full sm:px-4">
                                     <figure className="rounded-2xl bg-white p-8 text-sm leading-6 shadow-md border border-gray-100">
-                                        <blockquote className="text-gray-900"><p>“Esta aplicación transformó nuestra cobranza. Las notificaciones automáticas son una maravilla y hemos reducido la cartera vencida en un 40%.”</p></blockquote>
+                                        <blockquote className="text-gray-900"><p>“El proceso fue increíblemente rápido y sencillo. Tuve el dinero que necesitaba el mismo día. ¡Totalmente recomendados!”</p></blockquote>
                                         <figcaption className="mt-6 flex items-center gap-x-4">
                                             <div>
-                                                <div className="font-semibold text-gray-900">Ana García</div>
-                                                <div className="text-gray-600">Gerente de Finanzas</div>
+                                                <div className="font-semibold text-gray-900">Marco Antonio R.</div>
+                                                <div className="text-gray-600">Cliente Satisfecho</div>
                                             </div>
                                         </figcaption>
                                     </figure>
                                 </div>
                                 <div className="pt-8 sm:inline-block sm:w-full sm:px-4">
                                     <figure className="rounded-2xl bg-white p-8 text-sm leading-6 shadow-md border border-gray-100">
-                                        <blockquote className="text-gray-900"><p>“La facilidad para registrar préstamos y ver el estado de cada cliente en tiempo real no tiene precio. Me ahorra horas de trabajo a la semana.”</p></blockquote>
+                                        <blockquote className="text-gray-900"><p>“Me encantó la claridad en los pagos. Siempre supe cuánto debía pagar y pude revisar mi estado de cuenta en línea fácilmente.”</p></blockquote>
                                         <figcaption className="mt-6 flex items-center gap-x-4">
                                             <div>
-                                                <div className="font-semibold text-gray-900">Carlos Mendoza</div>
-                                                <div className="text-gray-600">Cobrador Independiente</div>
+                                                <div className="font-semibold text-gray-900">Verónica Soto</div>
+                                                <div className="text-gray-600">Cliente Satisfecha</div>
                                             </div>
                                         </figcaption>
                                     </figure>
                                 </div>
                                  <div className="pt-8 sm:inline-block sm:w-full sm:px-4">
                                     <figure className="rounded-2xl bg-white p-8 text-sm leading-6 shadow-md border border-gray-100">
-                                        <blockquote className="text-gray-900"><p>“Finalmente una herramienta que entiende nuestras necesidades. El soporte es rápido y la plataforma es increíblemente estable.”</p></blockquote>
+                                        <blockquote className="text-gray-900"><p>“Tenía una emergencia y me ayudaron a resolverla sin complicaciones. El servicio por WhatsApp es un gran plus. Muy agradecida.”</p></blockquote>
                                         <figcaption className="mt-6 flex items-center gap-x-4">
                                             <div>
-                                                <div className="font-semibold text-gray-900">Sofía Torres</div>
-                                                <div className="text-gray-600">Directora de Operaciones</div>
+                                                <div className="font-semibold text-gray-900">Julieta Méndez</div>
+                                                <div className="text-gray-600">Cliente Satisfecha</div>
                                             </div>
                                         </figcaption>
                                     </figure>
