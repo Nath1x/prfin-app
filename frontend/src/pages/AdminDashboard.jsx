@@ -45,6 +45,10 @@ function AdminDashboard() {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentRef, setPaymentRef] = useState('');
 
+  // --- NUEVO: ESTADOS PARA EL CÁLCULO AUTOMÁTICO ---
+  const [calculatedTotal, setCalculatedTotal] = useState(0);
+  const [calculatedDaily, setCalculatedDaily] = useState(0);
+
 
   // --- LÓGICA DE NOTIFICACIONES ---
   const showNotification = (message, type = 'success') => {
@@ -222,6 +226,23 @@ function AdminDashboard() {
     }
   }, [selectedUserForPayment]);
 
+  // --- NUEVO: EFECTO PARA EL CÁLCULO AUTOMÁTICO ---
+  useEffect(() => {
+    const tasaInteres = 0.32; // La misma tasa que en tu backend
+    const monto = parseFloat(montoPrestamo) || 0;
+    const plazo = parseInt(plazoDias, 10) || 1;
+
+    if (monto > 0) {
+      const montoTotal = monto * (1 + tasaInteres);
+      const cuotaDiaria = montoTotal / plazo;
+      setCalculatedTotal(montoTotal);
+      setCalculatedDaily(cuotaDiaria);
+    } else {
+      setCalculatedTotal(0);
+      setCalculatedDaily(0);
+    }
+  }, [montoPrestamo, plazoDias]);
+
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -257,7 +278,6 @@ function AdminDashboard() {
       <main className="flex-1 p-8 overflow-auto">
         {loading ? <div className="text-center text-gray-500">Cargando datos...</div> : error ? <div className="text-center text-red-600 p-4 bg-red-50 rounded-md">Error: {error}</div> :
         <div className="max-w-7xl mx-auto">
-            {/* VISTA: DASHBOARD */}
             {activeView === 'dashboard' && (
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900 mb-8">Dashboard General</h1>
@@ -269,7 +289,6 @@ function AdminDashboard() {
                 </div>
             )}
             
-            {/* VISTA: USUARIOS */}
             {activeView === 'users' && (
                 <div>
                     <div className="flex justify-between items-center mb-8">
@@ -305,7 +324,6 @@ function AdminDashboard() {
                 </div>
             )}
 
-            {/* VISTA: PRÉSTAMOS */}
             {activeView === 'loans' && (
                 <div>
                     <div className="flex justify-between items-center mb-8">
@@ -343,7 +361,6 @@ function AdminDashboard() {
                 </div>
             )}
 
-            {/* VISTA: REGISTRAR PAGO */}
             {activeView === 'payments' && (
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900 mb-8">Registrar un Pago</h1>
@@ -407,6 +424,22 @@ function AdminDashboard() {
                     <div><label className="block text-sm font-medium text-gray-700">Cliente</label><select value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)} required className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"><option value="">Selecciona un cliente...</option>{users.filter(u => u.rol === 'cliente').map(user => (<option key={user.id} value={user.id}>{user.nombre_completo}</option>))}</select></div>
                     <div><label className="block text-sm font-medium text-gray-700">Monto del Préstamo</label><input type="number" step="0.01" value={montoPrestamo} onChange={(e) => setMontoPrestamo(e.target.value)} placeholder="1000.00" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/></div>
                     <div><label className="block text-sm font-medium text-gray-700">Plazo en Días</label><input type="number" value={plazoDias} onChange={(e) => setPlazoDias(e.target.value)} placeholder="29" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/></div>
+                    
+                    {/* --- NUEVO: Resumen de cálculo automático --- */}
+                    {montoPrestamo > 0 && (
+                        <div className="bg-indigo-50 p-4 rounded-lg mt-4">
+                            <h3 className="text-sm font-medium text-gray-700 mb-2">Resumen del Préstamo</h3>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-600">Total a Pagar:</span>
+                                <span className="font-semibold text-gray-900">${calculatedTotal.toLocaleString('es-MX', {minimumFractionDigits: 2})}</span>
+                            </div>
+                            <div className="flex justify-between text-sm mt-1">
+                                <span className="text-gray-600">Cuota Diaria Estimada:</span>
+                                <span className="font-semibold text-gray-900">${calculatedDaily.toLocaleString('es-MX', {minimumFractionDigits: 2})}</span>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="pt-4 flex justify-end"><button type="button" onClick={() => setLoanModalOpen(false)} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md mr-2 hover:bg-gray-300">Cancelar</button><button type="submit" className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Registrar Préstamo</button></div>
                 </form>
             </div>
@@ -415,7 +448,7 @@ function AdminDashboard() {
 
       {/* --- NOTIFICACIÓN TOAST --- */}
       {notification.show && (
-        <div className={`fixed bottom-5 right-5 px-4 py-2 rounded-lg shadow-lg text-white ${notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
+        <div className={`fixed bottom-5 right-5 px-4 py-2 rounded-lg shadow-lg text-white transition-transform transform ${notification.show ? 'translate-x-0' : 'translate-x-full'} ${notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
             {notification.message}
         </div>
       )}
