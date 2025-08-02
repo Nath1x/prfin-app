@@ -1,4 +1,4 @@
- // src/pages/Login.jsx
+// src/pages/Login.jsx
  import React, { useState } from 'react';
  import { useNavigate, Link } from 'react-router-dom';
  // No necesitamos importar un CSS externo, lo pondremos aquí mismo.
@@ -9,7 +9,7 @@
  );
 
  const Login = () => {
-     const [telefono_whatsapp, setTelefonoWhatsapp] = useState('+52');
+     const [telefono, setTelefono] = useState(''); // Almacenará solo los 10 dígitos
      const [password, setPassword] = useState('');
      const [error, setError] = useState('');
      const [isLoading, setIsLoading] = useState(false);
@@ -19,6 +19,8 @@
          e.preventDefault();
          setError('');
          setIsLoading(true);
+         
+         const telefono_whatsapp = `+52${telefono}`; // Unimos el prefijo antes de enviar
 
          try {
              const response = await fetch(import.meta.env.VITE_API_URL + '/api/login', {
@@ -54,21 +56,19 @@
 
      const handleTelefonoChange = (e) => {
          const value = e.target.value;
-         // Aseguramos que siempre empiece con +52 y solo permitimos números después
-         if (value.startsWith('+52')) {
-             const numericPart = value.substring(3).replace(/[^0-9]/g, '');
-             setTelefonoWhatsapp(`+52${numericPart}`);
-         } else if (value === '+' || value === '+5' || value === '') {
-            setTelefonoWhatsapp('+52');
+         // Permitimos solo números y limitamos a 10 dígitos
+         const numericValue = value.replace(/[^0-9]/g, '');
+         if (numericValue.length <= 10) {
+             setTelefono(numericValue);
          }
      };
      
-     // --- CORRECCIÓN: Estilos de animación integrados directamente ---
+     // --- Estilos de animación integrados, sincronizados con el Home ---
      const animationStyles = `
         .login-container-animated {
-            background: linear-gradient(135deg, #f3e8ff, #a78bfa, #f3e8ff);
+            background: linear-gradient(135deg, #e0e7ff, #c7d2fe, #e0e7ff);
             background-size: 200% 200%;
-            animation: gradientAnimation 10s ease-in-out infinite;
+            animation: gradientAnimation 15s ease-in-out infinite;
         }
 
         @keyframes gradientAnimation {
@@ -107,17 +107,22 @@
                              <label htmlFor="telefono" className="block text-sm font-medium text-gray-700">
                                  Número de Teléfono
                              </label>
-                             <div className="mt-1">
-                                 <input
-                                     id="telefono"
-                                     name="telefono"
-                                     type="tel"
-                                     autoComplete="tel"
-                                     required
-                                     value={telefono_whatsapp}
-                                     onChange={handleTelefonoChange}
-                                     className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                                 />
+                             {/* --- NUEVO: Campo de teléfono rediseñado --- */}
+                             <div className="mt-1 flex rounded-md shadow-sm">
+                                <span className="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-gray-500 sm:text-sm">
+                                    +52
+                                </span>
+                                <input
+                                    id="telefono"
+                                    name="telefono"
+                                    type="tel"
+                                    autoComplete="tel"
+                                    required
+                                    value={telefono}
+                                    onChange={handleTelefonoChange}
+                                    placeholder="55 1234 5678"
+                                    className="block w-full min-w-0 flex-1 rounded-none rounded-r-md border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                />
                              </div>
                          </div>
 
@@ -149,7 +154,7 @@
                              <button
                                  type="submit"
                                  disabled={isLoading}
-                                 className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                 className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                              >
                                  {isLoading ? 'Ingresando...' : 'Ingresar'}
                              </button>
