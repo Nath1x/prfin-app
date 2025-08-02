@@ -17,9 +17,7 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// --- CORRECCIÓN DEFINITIVA: Configuración de la conexión para Render ---
-// Esta es la forma correcta de conectarse a una base de datos en Render.
-// Se usa una única variable de entorno: DATABASE_URL.
+// --- Configuración de la conexión para Render ---
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL, 
     ssl: {
@@ -28,7 +26,7 @@ const pool = new Pool({
 });
 
 // Inicializar cliente de Twilio
-const twilioClient = new twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+const twilioClient = new twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWilio_AUTH_TOKEN);
 const twilioWhatsappNumber = process.env.TWILIO_WHATSAPP_NUMBER; // Tu número de sandbox de Twilio
 
 // --- FUNCIONES DE AYUDA PARA WHATSAPP ---
@@ -82,39 +80,6 @@ const authenticateToken = (requiredRole) => {
         });
     };
 };
-
-// ===================================================================
-// === RUTA TEMPORAL PARA CREAR/RESETEAR EL USUARIO ADMINISTRADOR ====
-// ===================================================================
-app.get('/api/setup-admin', async (req, res) => {
-    try {
-        const adminPhone = '+525511111111';
-        const adminPassword = 'password123';
-
-        // 1. Borramos cualquier admin anterior para evitar duplicados
-        await pool.query('DELETE FROM usuarios WHERE telefono_whatsapp = $1', [adminPhone]);
-
-        // 2. Generamos un nuevo hash SEGURO para la contraseña
-        const salt = await bcrypt.genSalt(10);
-        const password_hash = await bcrypt.hash(adminPassword, salt);
-
-        // 3. Insertamos el nuevo usuario administrador
-        const result = await pool.query(
-            'INSERT INTO usuarios (nombre_completo, telefono_whatsapp, password_hash, rol) VALUES ($1, $2, $3, $4) RETURNING id, nombre_completo, rol',
-            ['Admin Principal', adminPhone, password_hash, 'admin']
-        );
-
-        res.status(201).json({ 
-            message: '¡Usuario administrador creado/reseteado exitosamente!',
-            user: result.rows[0] 
-        });
-
-    } catch (error) {
-        console.error('Error en la configuración del admin:', error);
-        res.status(500).json({ error: 'Error interno al configurar el admin', details: error.message });
-    }
-});
-
 
 // --- RUTAS DE PRUEBA ---
 
