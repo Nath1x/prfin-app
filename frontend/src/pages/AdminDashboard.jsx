@@ -45,7 +45,7 @@ function AdminDashboard() {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentRef, setPaymentRef] = useState('');
 
-  // --- NUEVO: ESTADOS PARA EL CÁLCULO AUTOMÁTICO ---
+  // --- ESTADOS PARA CÁLCULOS AUTOMÁTICOS ---
   const [calculatedTotal, setCalculatedTotal] = useState(0);
   const [calculatedDaily, setCalculatedDaily] = useState(0);
 
@@ -105,7 +105,12 @@ function AdminDashboard() {
         });
         const data = await response.json(); 
         if (response.ok) {
-            setUserPaymentsToRegister(data.filter(p => p.estado !== 'PAGADO'));
+            const pendingPayments = data.filter(p => p.estado !== 'PAGADO');
+            setUserPaymentsToRegister(pendingPayments);
+            // --- AUTOMATIZACIÓN: Seleccionar la primera cuota pendiente ---
+            if (pendingPayments.length > 0) {
+                setSelectedPaymentId(pendingPayments[0].id);
+            }
         } else {
             throw new Error(data.error || 'Error al cargar pagos del usuario.');
         }
@@ -120,13 +125,14 @@ function AdminDashboard() {
   const handleRegisterUser = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('token');
+    const fullPhoneNumber = `+52${newUserPhone}`;
     try {
       const response = await fetch('https://prfin-backend.onrender.com/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
           nombre_completo: newUserName,
-          telefono_whatsapp: newUserPhone,
+          telefono_whatsapp: fullPhoneNumber,
           password: newUserPassword,
           rol: newUserRole,
           cobrador_asignado_id: selectedCobradorForNewUser || null 
@@ -226,9 +232,8 @@ function AdminDashboard() {
     }
   }, [selectedUserForPayment]);
 
-  // --- NUEVO: EFECTO PARA EL CÁLCULO AUTOMÁTICO ---
   useEffect(() => {
-    const tasaInteres = 0.32; // La misma tasa que en tu backend
+    const tasaInteres = 0.32;
     const monto = parseFloat(montoPrestamo) || 0;
     const plazo = parseInt(plazoDias, 10) || 1;
 
@@ -242,6 +247,17 @@ function AdminDashboard() {
       setCalculatedDaily(0);
     }
   }, [montoPrestamo, plazoDias]);
+
+  // --- AUTOMATIZACIÓN: Rellenar monto de pago al seleccionar cuota ---
+  useEffect(() => {
+    if (selectedPaymentId) {
+        const payment = userPaymentsToRegister.find(p => p.id === parseInt(selectedPaymentId));
+        if (payment) {
+            const remaining = parseFloat(payment.monto_cuota) - parseFloat(payment.monto_pagado);
+            setPaymentAmount(remaining.toFixed(2));
+        }
+    }
+  }, [selectedPaymentId, userPaymentsToRegister]);
 
 
   const handleLogout = () => {
@@ -374,6 +390,11 @@ function AdminDashboard() {
                                 </select>
                             </div>
                             {selectedUserForPayment && (
+                                <div className="bg-indigo-50 p-4 rounded-lg">
+                                    <p className="text-sm">Saldo Pendiente Total: <span className="font-semibold">${parseFloat(users.find(u => u.id === parseInt(selectedUserForPayment))?.saldo_pendiente_total || 0).toFixed(2)}</span></p>
+                                </div>
+                            )}
+                            {selectedUserForPayment && (
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Cuota a Pagar</label>
                                     <select value={selectedPaymentId} onChange={(e) => setSelectedPaymentId(e.target.value)} required className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
@@ -384,7 +405,7 @@ function AdminDashboard() {
                             )}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Monto del Abono</label>
-                                <input type="number" step="0.01" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} placeholder="50.00" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/>
+                                <input type="number" step="0.01" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} placeholder="0.00" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Referencia (Opcional)</label>
@@ -406,7 +427,13 @@ function AdminDashboard() {
                 <div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold">Registrar Nuevo Usuario</h2><button onClick={() => setUserModalOpen(false)} className="text-gray-500 hover:text-gray-800"><CloseIcon /></button></div>
                 <form onSubmit={handleRegisterUser} className="space-y-4">
                     <div><label className="block text-sm font-medium text-gray-700">Nombre Completo</label><input type="text" value={newUserName} onChange={(e) => setNewUserName(e.target.value)} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/></div>
-                    <div><label className="block text-sm font-medium text-gray-700">Teléfono WhatsApp</label><input type="text" value={newUserPhone} onChange={(e) => setNewUserPhone(e.target.value)} placeholder="+52..." required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/></div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Teléfono (10 dígitos)</label>
+                        <div className="mt-1 flex rounded-md shadow-sm">
+                            <span className="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-gray-500 sm:text-sm">+52</span>
+                            <input type="tel" value={newUserPhone} onChange={(e) => setNewUserPhone(e.target.value.replace(/[^0-9]/g, '').slice(0, 10))} placeholder="55 1234 5678" required className="block w-full min-w-0 flex-1 rounded-none rounded-r-md border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"/>
+                        </div>
+                    </div>
                     <div><label className="block text-sm font-medium text-gray-700">Contraseña</label><input type="password" value={newUserPassword} onChange={(e) => setNewUserPassword(e.target.value)} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/></div>
                     <div><label className="block text-sm font-medium text-gray-700">Rol</label><select value={newUserRole} onChange={(e) => setNewUserRole(e.target.value)} required className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"><option value="cliente">Cliente</option><option value="cobrador">Cobrador</option><option value="admin">Administrador</option></select></div>
                     {newUserRole === 'cliente' && (<div><label className="block text-sm font-medium text-gray-700">Asignar Cobrador (Opcional)</label><select value={selectedCobradorForNewUser} onChange={(e) => setSelectedCobradorForNewUser(e.target.value)} className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"><option value="">-- Sin asignar --</option>{cobradoresList.map(c => (<option key={c.id} value={c.id}>{c.nombre_completo}</option>))}</select></div>)}
@@ -425,7 +452,6 @@ function AdminDashboard() {
                     <div><label className="block text-sm font-medium text-gray-700">Monto del Préstamo</label><input type="number" step="0.01" value={montoPrestamo} onChange={(e) => setMontoPrestamo(e.target.value)} placeholder="1000.00" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/></div>
                     <div><label className="block text-sm font-medium text-gray-700">Plazo en Días</label><input type="number" value={plazoDias} onChange={(e) => setPlazoDias(e.target.value)} placeholder="29" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/></div>
                     
-                    {/* --- NUEVO: Resumen de cálculo automático --- */}
                     {montoPrestamo > 0 && (
                         <div className="bg-indigo-50 p-4 rounded-lg mt-4">
                             <h3 className="text-sm font-medium text-gray-700 mb-2">Resumen del Préstamo</h3>
