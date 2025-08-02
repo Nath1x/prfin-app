@@ -1,62 +1,49 @@
-// C:\Users\1vkwi\prfin-app\frontend\src\App.jsx
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom'; // Importa Link
+// src/App.jsx
+import React from 'react';
+import { Link } from 'react-router-dom'; // Importamos Link para la navegación
 
-function App() {
-  const [backendMessage, setBackendMessage] = useState('Conectando al backend...');
-  const [dbStatus, setDbStatus] = useState('Conectando a la DB...');
+const App = () => {
+    return (
+        // Contenedor principal con un fondo degradado que ocupa toda la pantalla
+        <div className="min-h-screen bg-gradient-to-r from-blue-700 to-indigo-900 text-white flex flex-col items-center justify-center p-8">
+            
+            <div className="text-center max-w-2xl">
+                {/* Logo o Título Principal */}
+                <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-4">
+                    Bienvenido a PrFin-App
+                </h1>
 
-  useEffect(() => {
-    // Fetch para la ruta principal del backend
-    // AHORA USA LA VARIABLE DE ENTORNO VITE_API_URL
-    fetch(import.meta.env.VITE_API_URL + '/')
-      .then(response => response.text())
-      .then(data => setBackendMessage(data))
-      .catch(error => {
-        console.error('Error al conectar al backend:', error);
-        setBackendMessage('Error al conectar al backend. Asegúrate de que esté corriendo.');
-      });
+                {/* Subtítulo o Slogan */}
+                <p className="text-lg md:text-xl text-indigo-200 mb-8">
+                    La solución simple y eficaz para la gestión de préstamos y cobranza.
+                </p>
 
-    // Fetch para la ruta de prueba de la base de datos
-    // AHORA USA LA VARIABLE DE ENTORNO VITE_API_URL
-    fetch(import.meta.env.VITE_API_URL + '/test-db')
-      .then(response => response.json())
-      .then(data => {
-        if (data.message) {
-          setDbStatus(`DB: ${data.message} - ${new Date(data.dbTime).toLocaleString()}`);
-        } else if (data.error) {
-          setDbStatus(`Error DB: ${data.error.message || data.details}`);
-        }
-      })
-      .catch(error => {
-        console.error('Error al conectar a la DB:', error);
-        setDbStatus('Error al conectar a la DB. Verifica el backend y la DB.');
-      });
-  }, []);
+                {/* Contenedor para los botones de acción */}
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    {/* Botón principal para Iniciar Sesión */}
+                    <Link
+                        to="/login"
+                        className="w-full sm:w-auto bg-white text-blue-700 font-bold px-8 py-3 rounded-full shadow-lg transform hover:scale-105 transition-transform duration-300"
+                    >
+                        Iniciar Sesión
+                    </Link>
 
-  return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 font-sans">
-      <header className="bg-white p-8 rounded-lg shadow-lg text-center max-w-md w-full">
-        <h1 className="text-4xl font-extrabold text-blue-700 mb-4 tracking-tight">PrFin</h1>
-        <p className="text-gray-700 text-lg mb-2">{backendMessage}</p>
-        <p className="text-gray-600 text-md mb-6">{dbStatus}</p>
-        <p className="text-green-600 text-xl font-semibold mb-4">
-          ¡Si ves esto, tu frontend y backend se están comunicando!
-        </p>
-        <p className="text-gray-500 text-sm mb-6">
-          Esta es la pantalla de estado del sistema. Para acceder al portal, haz clic abajo.
-        </p>
-        <div className="mt-8">
-          <Link
-            to="/login"
-            className="bg-purple-600 text-white p-3 rounded-md font-semibold hover:bg-purple-700 transition duration-300 inline-block"
-          >
-            Ir a Login
-          </Link>
+                    {/* Botón secundario (opcional) */}
+                    <Link
+                        to="#" // Puedes cambiar este enlace en el futuro
+                        className="w-full sm:w-auto bg-transparent border-2 border-white text-white font-bold px-8 py-3 rounded-full shadow-lg transform hover:scale-105 transition-transform duration-300"
+                    >
+                        Saber Más
+                    </Link>
+                </div>
+            </div>
+
+            {/* Pie de página simple */}
+            <footer className="absolute bottom-8 text-indigo-300 text-sm">
+                © {new Date().getFullYear()} PrFin-App. Todos los derechos reservados.
+            </footer>
         </div>
-      </header>
-    </div>
-  );
-}
+    );
+};
 
 export default App;
