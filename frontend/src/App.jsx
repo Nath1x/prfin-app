@@ -13,15 +13,18 @@ const FeatureIcon = ({ children }) => (
     </div>
 );
 
-// --- Componentes SVG para la sección de confianza ---
-const TrustLogo = ({ name, path }) => (
-    <div className="col-span-2 flex justify-center items-center max-h-12 w-full object-contain lg:col-span-1">
-        <svg className="h-10 w-auto text-gray-400 hover:text-indigo-600 transition-colors" fill="currentColor" viewBox="0 0 120 30" xmlns="http://www.w3.org/2000/svg">
-            <title>{name}</title>
-            {path}
-        </svg>
+// --- CORRECCIÓN: Componente mejorado para los logos de principios, ahora con texto ---
+const TrustLogo = ({ name, children }) => (
+    <div className="group col-span-1 flex flex-col items-center gap-y-3 text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 group-hover:bg-indigo-100 transition-colors duration-300">
+            <svg className="h-8 w-8 text-gray-500 group-hover:text-indigo-600 transition-colors duration-300" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" aria-hidden="true">
+                {children}
+            </svg>
+        </div>
+        <span className="text-sm font-semibold text-gray-700 group-hover:text-indigo-600 transition-colors duration-300">{name}</span>
     </div>
 );
+
 
 // --- DATOS DE LOS TESTIMONIOS ---
 const testimonials = [
@@ -183,14 +186,20 @@ const App = () => {
                     </div>
                 </div>
 
-                {/* ========== SECCIÓN DE CONFIANZA ========== */}
+                {/* ========== SECCIÓN DE CONFIANZA (CORREGIDA) ========== */}
                 <div className="bg-white py-12 sm:py-16">
                     <div className="mx-auto max-w-7xl px-6 lg:px-8">
                         <h2 className="text-center text-lg font-semibold leading-8 text-gray-900">Nuestros principios se basan en</h2>
-                        <div className="mx-auto mt-10 grid max-w-lg grid-cols-1 items-center gap-x-8 gap-y-10 sm:max-w-xl sm:grid-cols-3 lg:mx-0 lg:max-w-none">
-                           <TrustLogo name="Rapidez" path={<path d="M6.31 16.9l-3.12 3.48c-.4.45.13 1.12.64.88l15.9-7.6c.4-.2.4-.77 0-.96L3.83 5.02c-.5-.24-1.04.43-.64.88l3.12 3.48h6.48c.47 0 .85.38.85.85v2.54c0 .47-.38.85-.85.85H6.3Z M21.31 9.38v11.25c0 .47.38.85.85.85h1.7c.47 0 .85-.38.85-.85V9.38c0-.47-.38-.85-.85-.85h-1.7c-.47 0-.85.38-.85.85Z" />} />
-                           <TrustLogo name="Confianza" path={<path d="M16.98 5.27L6.02 10.2c-.8.4-1.87.2-2.45-.6-.73-1-2.1-2.97-2.1-2.97-.4-.53.13-1.2.64-.96l15.9 7.6c.4.2.4.77 0 .96l-7.95 3.8-1.5-1.86 5.3-2.53c.4-.2.4-.77 0-.96L6.02 7.35l10.96-4.95c.4-.2.4-.77 0-.96L9.68.2c-.4-.2-.87.27-.7.7L10.53 5c.1.33.02.7-.23.95L8.75 7.3l8.23-3.7c.4-.2.87.27.7.7l-1.55 4.07c-.1.33.02.7.23.95l1.55 1.35c.25.2.62.1.7-.23l1.55-4.07c.17-.44-.3-.9-.7-.7Z" />} />
-                           <TrustLogo name="Seguridad" path={<path d="M12.75 1.12L4.62 5.18c-.4.2-.67.6-.67 1.05v7.53c0 4.35 3.15 8.18 7.2 9.12.4.1.8.1 1.2 0 4.05-.94 7.2-4.77 7.2-9.12V6.23c0-.45-.27-.85-.67-1.05L13.25 1.12c-.15-.08-.35-.08-.5 0Zm.25 15.38c-2.25 0-4.5-1.8-4.5-4.5s2.25-4.5 4.5-4.5 4.5 1.8 4.5 4.5-2.25 4.5-4.5 4.5Zm0-7.5c-1.65 0-3 1.35-3 3s1.35 3 3 3 3-1.35 3-3-1.35-3-3-3Z" />} />
+                        <div className="mx-auto mt-16 grid max-w-lg grid-cols-1 items-start gap-x-8 gap-y-10 sm:max-w-xl sm:grid-cols-3 lg:mx-0 lg:max-w-none">
+                           <TrustLogo name="Rapidez">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                           </TrustLogo>
+                           <TrustLogo name="Confianza">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286zm0 13.036h.008v.008h-.008v-.008z" />
+                           </TrustLogo>
+                           <TrustLogo name="Seguridad">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                           </TrustLogo>
                         </div>
                     </div>
                 </div>
