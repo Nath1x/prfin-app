@@ -61,16 +61,16 @@ const App = () => {
                             <div className="grid grid-cols-1 items-center gap-x-8 gap-y-16 lg:grid-cols-2">
                                 {/* Contenido de texto a la izquierda */}
                                 <div className="text-center lg:text-left">
-                                    <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">Préstamos rápidos y transparentes</h1>
-                                    <p className="mt-6 text-lg leading-8 text-gray-600">Todo digital, accesible y con tasas claras. Simula tu pago y solicita hoy mismo.</p>
+                                    <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">Control total de tu operación de préstamos</h1>
+                                    <p className="mt-6 text-lg leading-8 text-gray-600">Centraliza tu información, automatiza la cobranza y optimiza los resultados de tu equipo en tiempo real.</p>
                                     <div className="mt-10 flex items-center justify-center gap-x-6 lg:justify-start">
-                                        <Link to="/login" className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Acceder</Link>
+                                        <Link to="/login" className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Acceder al Panel</Link>
                                         <a href="#features" className="text-sm font-semibold leading-6 text-gray-900">¿Cómo funciona? <span aria-hidden="true">→</span></a>
                                     </div>
                                 </div>
                                 {/* Calculadora a la derecha */}
                                 <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
-                                    <h2 className="text-2xl font-semibold text-gray-800 mb-4">Calcula tu pago a 29 días</h2>
+                                    <h2 className="text-2xl font-semibold text-gray-800 mb-4">Simulador de Préstamos</h2>
                                     <div className="space-y-4">
                                         <div>
                                             <label htmlFor="monto" className="block text-sm font-medium text-gray-700">Monto solicitado (MXN)</label>
@@ -95,8 +95,8 @@ const App = () => {
                 <div id="features" className="bg-white py-24 sm:py-32">
                     <div className="mx-auto max-w-7xl px-6 lg:px-8">
                         <div className="mx-auto max-w-2xl lg:text-center">
-                            <h2 className="text-base font-semibold leading-7 text-indigo-600">Todo en un solo lugar</h2>
-                            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">La plataforma que necesitas para una gestión eficiente</p>
+                            <h2 className="text-base font-semibold leading-7 text-indigo-600">Hecho para tu equipo</h2>
+                            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Herramientas diseñadas para maximizar la productividad</p>
                         </div>
                         <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-4xl">
                             <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-10 lg:max-w-none lg:grid-cols-2 lg:gap-y-16">
@@ -104,17 +104,17 @@ const App = () => {
                                     <dt className="text-base font-semibold leading-7 text-gray-900">
                                         <FeatureIcon>
                                             <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v-.003" /></svg>
-                                        </FeatureIcon>Gestión Centralizada
+                                        </FeatureIcon>Panel de Control Unificado
                                     </dt>
-                                    <dd className="mt-2 text-base leading-7 text-gray-600">Toda la información de tus clientes, préstamos y pagos en un solo lugar, accesible al instante.</dd>
+                                    <dd className="mt-2 text-base leading-7 text-gray-600">Visualiza y administra toda tu cartera de clientes, préstamos y pagos. Ten visibilidad completa del negocio desde un solo lugar.</dd>
                                 </div>
                                 <div className="relative pl-16">
                                     <dt className="text-base font-semibold leading-7 text-gray-900">
                                         <FeatureIcon>
                                             <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" /></svg>
-                                        </FeatureIcon>Notificaciones WhatsApp
+                                        </FeatureIcon>Cobranza Automatizada
                                     </dt>
-                                    <dd className="mt-2 text-base leading-7 text-gray-600">Envía recordatorios de pago y confirmaciones de forma automática para reducir la morosidad.</dd>
+                                    <dd className="mt-2 text-base leading-7 text-gray-600">Reduce el esfuerzo manual. El sistema envía recordatorios de pago y confirmaciones por WhatsApp para mantener tu cartera al día.</dd>
                                 </div>
                             </dl>
                         </div>
