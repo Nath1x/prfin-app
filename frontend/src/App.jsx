@@ -13,6 +13,41 @@ const FeatureIcon = ({ children }) => (
     </div>
 );
 
+// --- DATOS DE LOS TESTIMONIOS ---
+const testimonials = [
+    {
+        quote: "El proceso fue increíblemente rápido y sencillo. Tuve el dinero que necesitaba el mismo día. ¡Totalmente recomendados!",
+        author: "Marco Antonio R.",
+        title: "Cliente Satisfecho"
+    },
+    {
+        quote: "Me encantó la claridad en los pagos. Siempre supe cuánto debía pagar y pude revisar mi estado de cuenta en línea fácilmente.",
+        author: "Verónica Soto",
+        title: "Cliente Satisfecha"
+    },
+    {
+        quote: "Tenía una emergencia y me ayudaron a resolverla sin complicaciones. El servicio por WhatsApp es un gran plus. Muy agradecida.",
+        author: "Julieta Méndez",
+        title: "Cliente Satisfecha"
+    },
+    {
+        quote: "Como dueño de un pequeño negocio, necesitaba liquidez para comprar inventario. PrFin-App me dio una solución rápida y confiable.",
+        author: "Ricardo Herrera",
+        title: "Dueño de Tienda"
+    },
+    {
+        quote: "Pude pagar la colegiatura de mi hijo a tiempo gracias a su eficiencia. El proceso es muy seguro y transparente.",
+        author: "Laura Campos",
+        title: "Madre de Familia"
+    },
+    {
+        quote: "Comparado con otros servicios, aquí todo es más claro y el trato es más personal. Se siente la confianza desde el primer momento.",
+        author: "David Morales",
+        title: "Profesional Independiente"
+    }
+];
+
+
 // --- COMPONENTE PRINCIPAL DE LA PÁGINA DE INICIO ---
 const App = () => {
     // --- ESTADO Y LÓGICA PARA LA CALCULADORA INTERACTIVA ---
@@ -22,6 +57,9 @@ const App = () => {
     const TASA_FIJA = 1.45; // Tasa del 45% (1000 se convierte en 1450)
     const PLAZO_DIAS = 29;
 
+    // --- ESTADO Y LÓGICA PARA EL CARRUSEL DE TESTIMONIOS ---
+    const [currentTestimonial, setCurrentTestimonial] = useState(0);
+
     useEffect(() => {
         const montoNumerico = parseFloat(monto) || 0;
         const totalFinal = montoNumerico * TASA_FIJA;
@@ -29,7 +67,16 @@ const App = () => {
 
         setTotalPagar(totalFinal.toFixed(2));
         setPagoDiario(cuotaDiaria.toFixed(2));
-    }, [monto]); // Se ejecuta cada vez que el 'monto' cambia
+    }, [monto]);
+
+    useEffect(() => {
+        // Cambia el testimonio cada 5 segundos
+        const timer = setInterval(() => {
+            setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+        }, 5000);
+        // Limpia el intervalo cuando el componente se desmonta
+        return () => clearInterval(timer);
+    }, []);
 
     return (
         <div className="bg-white">
@@ -137,48 +184,43 @@ const App = () => {
                     </div>
                 </div>
 
-                {/* ========== SECCIÓN DE TESTIMONIOS ========== */}
+                {/* ========== SECCIÓN DE TESTIMONIOS (CARRUSEL) ========== */}
                 <section className="bg-gray-50 py-24 sm:py-32">
                     <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                        <div className="mx-auto max-w-xl text-center">
+                        <div className="mx-auto max-w-2xl text-center">
                             <h2 className="text-lg font-semibold leading-8 tracking-tight text-indigo-600">Confianza y Satisfacción</h2>
                             <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">La experiencia de nuestros clientes</p>
                         </div>
-                        <div className="mx-auto mt-16 flow-root max-w-2xl sm:mt-20 lg:mx-0 lg:max-w-none">
-                            <div className="-mt-8 sm:-mx-4 sm:columns-2 sm:text-[0] lg:columns-3">
-                                <div className="pt-8 sm:inline-block sm:w-full sm:px-4">
-                                    <figure className="rounded-2xl bg-white p-8 text-sm leading-6 shadow-md border border-gray-100">
-                                        <blockquote className="text-gray-900"><p>“El proceso fue increíblemente rápido y sencillo. Tuve el dinero que necesitaba el mismo día. ¡Totalmente recomendados!”</p></blockquote>
-                                        <figcaption className="mt-6 flex items-center gap-x-4">
-                                            <div>
-                                                <div className="font-semibold text-gray-900">Marco Antonio R.</div>
-                                                <div className="text-gray-600">Cliente Satisfecho</div>
-                                            </div>
-                                        </figcaption>
-                                    </figure>
-                                </div>
-                                <div className="pt-8 sm:inline-block sm:w-full sm:px-4">
-                                    <figure className="rounded-2xl bg-white p-8 text-sm leading-6 shadow-md border border-gray-100">
-                                        <blockquote className="text-gray-900"><p>“Me encantó la claridad en los pagos. Siempre supe cuánto debía pagar y pude revisar mi estado de cuenta en línea fácilmente.”</p></blockquote>
-                                        <figcaption className="mt-6 flex items-center gap-x-4">
-                                            <div>
-                                                <div className="font-semibold text-gray-900">Verónica Soto</div>
-                                                <div className="text-gray-600">Cliente Satisfecha</div>
-                                            </div>
-                                        </figcaption>
-                                    </figure>
-                                </div>
-                                 <div className="pt-8 sm:inline-block sm:w-full sm:px-4">
-                                    <figure className="rounded-2xl bg-white p-8 text-sm leading-6 shadow-md border border-gray-100">
-                                        <blockquote className="text-gray-900"><p>“Tenía una emergencia y me ayudaron a resolverla sin complicaciones. El servicio por WhatsApp es un gran plus. Muy agradecida.”</p></blockquote>
-                                        <figcaption className="mt-6 flex items-center gap-x-4">
-                                            <div>
-                                                <div className="font-semibold text-gray-900">Julieta Méndez</div>
-                                                <div className="text-gray-600">Cliente Satisfecha</div>
-                                            </div>
-                                        </figcaption>
-                                    </figure>
-                                </div>
+                        <div className="relative mt-16">
+                            <div className="overflow-hidden relative h-48">
+                                {testimonials.map((testimonial, index) => (
+                                    <div
+                                        key={index}
+                                        className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentTestimonial ? 'opacity-100' : 'opacity-0'}`}
+                                    >
+                                        <figure className="rounded-2xl bg-white p-8 text-sm leading-6 shadow-md border border-gray-100 max-w-2xl mx-auto">
+                                            <blockquote className="text-center text-gray-900">
+                                                <p>“{testimonial.quote}”</p>
+                                            </blockquote>
+                                            <figcaption className="mt-6 flex justify-center items-center gap-x-4">
+                                                <div>
+                                                    <div className="font-semibold text-gray-900">{testimonial.author}</div>
+                                                    <div className="text-gray-600">{testimonial.title}</div>
+                                                </div>
+                                            </figcaption>
+                                        </figure>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="mt-8 flex justify-center gap-x-2">
+                                {testimonials.map((_, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => setCurrentTestimonial(index)}
+                                        className={`h-2 w-2 rounded-full ${currentTestimonial === index ? 'bg-indigo-600' : 'bg-gray-300'}`}
+                                        aria-label={`Go to slide ${index + 1}`}
+                                    ></button>
+                                ))}
                             </div>
                         </div>
                     </div>
