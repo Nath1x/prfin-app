@@ -45,11 +45,13 @@
                      navigate('/dashboard');
                  }
              } else {
-                 setError(data.error || 'Credenciales inválidas.');
+                 // --- MEJORA: Mostrar un error más detallado si el backend lo envía ---
+                 const errorMessage = data.details ? `${data.error}: ${data.details}` : (data.error || 'Credenciales inválidas.');
+                 setError(errorMessage);
              }
          } catch (err) {
              console.error('Error de red o del servidor:', err);
-             setError('No se pudo conectar al servidor. Intenta de nuevo más tarde.');
+             setError('No se pudo conectar al servidor. Verifica que el backend esté en línea.');
          } finally {
              setIsLoading(false);
          }
