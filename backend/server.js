@@ -17,13 +17,9 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Configuración de la conexión a la base de datos PostgreSQL
+// --- CORRECCIÓN: Configuración de la conexión a la base de datos para Render ---
 const pool = new Pool({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT,
+    connectionString: process.env.DATABASE_URL, // Render usa una Connection String
     ssl: {
         rejectUnauthorized: false // Permite la conexión SSL sin verificar el certificado (para Render)
     }
@@ -84,6 +80,39 @@ const authenticateToken = (requiredRole) => {
         });
     };
 };
+
+// ===================================================================
+// === RUTA TEMPORAL PARA CREAR/RESETEAR EL USUARIO ADMINISTRADOR ====
+// ===================================================================
+app.get('/api/setup-admin', async (req, res) => {
+    try {
+        const adminPhone = '+525511111111';
+        const adminPassword = 'password123';
+
+        // 1. Borramos cualquier admin anterior para evitar duplicados
+        await pool.query('DELETE FROM usuarios WHERE telefono_whatsapp = $1', [adminPhone]);
+
+        // 2. Generamos un nuevo hash SEGURO para la contraseña
+        const salt = await bcrypt.genSalt(10);
+        const password_hash = await bcrypt.hash(adminPassword, salt);
+
+        // 3. Insertamos el nuevo usuario administrador
+        const result = await pool.query(
+            'INSERT INTO usuarios (nombre_completo, telefono_whatsapp, password_hash, rol) VALUES ($1, $2, $3, $4) RETURNING id, nombre_completo, rol',
+            ['Admin Principal', adminPhone, password_hash, 'admin']
+        );
+
+        res.status(201).json({ 
+            message: '¡Usuario administrador creado/reseteado exitosamente!',
+            user: result.rows[0] 
+        });
+
+    } catch (error) {
+        console.error('Error en la configuración del admin:', error);
+        res.status(500).json({ error: 'Error interno al configurar el admin', details: error.message });
+    }
+});
+
 
 // --- RUTAS DE PRUEBA ---
 
