@@ -1,5 +1,5 @@
 // src/App.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 
 // --- COMPONENTES DE ICONOS (para mantener el código limpio) ---
@@ -29,12 +29,14 @@ const App = () => {
     const [monto, setMonto] = useState(5000);
     const [pagoDiario, setPagoDiario] = useState(0);
     const [totalPagar, setTotalPagar] = useState(0);
+    const [hasUserInteracted, setHasUserInteracted] = useState(false); // NUEVO: para la animación
     const TASA_FIJA = 1.45;
     const PLAZO_DIAS = 29;
 
     // --- ESTADO Y LÓGICA PARA EL CARRUSEL DE TESTIMONIOS ---
     const [currentTestimonial, setCurrentTestimonial] = useState(0);
 
+    // Efecto para calcular los pagos (sin cambios)
     useEffect(() => {
         const montoNumerico = parseFloat(monto) || 0;
         const totalFinal = montoNumerico * TASA_FIJA;
@@ -43,12 +45,34 @@ const App = () => {
         setPagoDiario(cuotaDiaria);
     }, [monto]);
 
+    // NUEVO: Efecto para la animación automática de la calculadora
+    useEffect(() => {
+        if (hasUserInteracted) return; // Si el usuario ya interactuó, no hacer nada
+
+        const animationInterval = setInterval(() => {
+            setMonto(prevMonto => {
+                const nextMonto = prevMonto + 1000;
+                return nextMonto > 15000 ? 1000 : nextMonto; // Reinicia al llegar al máximo
+            });
+        }, 2000); // Cambia el monto cada 2 segundos
+
+        return () => clearInterval(animationInterval); // Limpia el intervalo al salir
+    }, [hasUserInteracted]); // Este efecto depende del estado de interacción
+
+    // Efecto para el carrusel de testimonios (sin cambios)
     useEffect(() => {
         const timer = setInterval(() => {
             setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
         }, 5000);
         return () => clearInterval(timer);
     }, []);
+    
+    // NUEVO: Función para detener la animación al interactuar
+    const handleSliderInteraction = () => {
+        if (!hasUserInteracted) {
+            setHasUserInteracted(true);
+        }
+    };
 
     return (
         <div className="bg-white text-gray-800">
@@ -94,7 +118,18 @@ const App = () => {
                                                 <label htmlFor="monto" className="block text-sm font-medium text-gray-700">Monto solicitado</label>
                                                 <span className="text-2xl font-bold text-indigo-600">${new Intl.NumberFormat('es-MX').format(monto)}</span>
                                             </div>
-                                            <input type="range" id="monto" min="1000" max="15000" step="1000" value={monto} onChange={(e) => setMonto(e.target.value)} className="w-full h-2 mt-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"/>
+                                            <input 
+                                                type="range" 
+                                                id="monto" 
+                                                min="1000" 
+                                                max="15000" 
+                                                step="1000" 
+                                                value={monto} 
+                                                onMouseDown={handleSliderInteraction}
+                                                onTouchStart={handleSliderInteraction}
+                                                onChange={(e) => setMonto(e.target.value)} 
+                                                className="w-full h-2 mt-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                            />
                                         </div>
                                         <div className="flex justify-between items-center bg-indigo-50 p-4 rounded-lg">
                                             <div>
