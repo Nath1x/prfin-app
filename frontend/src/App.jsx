@@ -73,10 +73,26 @@ const App = () => {
                                     <h2 className="text-2xl font-semibold text-gray-800 mb-4">Simula tu préstamo</h2>
                                     <div className="space-y-4">
                                         <div>
-                                            <label htmlFor="monto" className="block text-sm font-medium text-gray-700">¿Cuánto necesitas? (MXN)</label>
-                                            <div className="relative mt-1 rounded-md shadow-sm">
-                                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><span className="text-gray-500 sm:text-sm">$</span></div>
-                                                <input type="number" id="monto" value={monto} onChange={(e) => setMonto(e.target.value)} className="block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="1000" />
+                                            <label htmlFor="monto" className="block text-sm font-medium text-gray-700">
+                                                Selecciona el monto que necesitas:
+                                            </label>
+                                            <div className="text-center my-2">
+                                                <span className="text-3xl font-bold text-gray-900">${new Intl.NumberFormat('es-MX').format(monto)}</span>
+                                                <span className="text-sm text-gray-500"> MXN</span>
+                                            </div>
+                                            <input
+                                                type="range"
+                                                id="monto"
+                                                min="1000"
+                                                max="15000"
+                                                step="1000"
+                                                value={monto}
+                                                onChange={(e) => setMonto(e.target.value)}
+                                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                            />
+                                            <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                                <span>$1,000</span>
+                                                <span>$15,000</span>
                                             </div>
                                         </div>
                                         <div className="bg-gray-50 p-4 rounded-lg text-center space-y-2">
