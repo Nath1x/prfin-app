@@ -18,8 +18,10 @@ app.use(cors());
 app.use(express.json());
 
 // --- CORRECCIÓN DEFINITIVA: Configuración de la conexión para Render ---
+// Esta es la forma correcta de conectarse a una base de datos en Render.
+// Se usa una única variable de entorno: DATABASE_URL.
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL, // Render usa una Connection String
+    connectionString: process.env.DATABASE_URL, 
     ssl: {
         rejectUnauthorized: false // Requerido para conexiones a Render DB
     }
