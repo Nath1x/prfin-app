@@ -57,9 +57,7 @@ const App = () => {
         setPagoDiario(cuotaDiaria);
     }, [monto]);
 
-    // ==================================================================
-    // === CORRECCIÓN: Lógica de animación del monto mucho más robusta ===
-    // ==================================================================
+    // Lógica de animación del monto
     useEffect(() => {
         const targetMonto = parseFloat(monto);
         cancelAnimationFrame(animationFrameId.current);
@@ -67,11 +65,9 @@ const App = () => {
         const animate = () => {
             setDisplayMonto(prevDisplay => {
                 const diff = targetMonto - prevDisplay;
-                // Si la diferencia es muy pequeña, detenemos la animación y fijamos el valor final.
                 if (Math.abs(diff) < 1) {
                     return targetMonto;
                 }
-                // Movemos el 10% de la distancia restante en cada frame para un efecto suave.
                 const step = diff * 0.1;
                 animationFrameId.current = requestAnimationFrame(animate);
                 return prevDisplay + step;
@@ -81,7 +77,7 @@ const App = () => {
         animationFrameId.current = requestAnimationFrame(animate);
 
         return () => cancelAnimationFrame(animationFrameId.current);
-    }, [monto]); // Este efecto se ejecuta cada vez que el 'monto' objetivo cambia.
+    }, [monto]);
 
     // Efecto para la animación automática de la calculadora
     useEffect(() => {
@@ -201,17 +197,76 @@ const App = () => {
 
                 {/* ========== SECCIÓN DE CARACTERÍSTICAS ========== */}
                 <div id="features" className="bg-gray-50 py-24 sm:py-32">
-                    {/* ... (sin cambios en esta sección) ... */}
+                    <div className="mx-auto max-w-7xl px-6 lg:px-8">
+                        <div className="mx-auto max-w-2xl lg:text-center">
+                            <h2 className="text-base font-semibold leading-7 text-indigo-600">Beneficios para ti</h2>
+                            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Un proceso diseñado para tu comodidad</p>
+                        </div>
+                        <div className="mx-auto mt-16 max-w-none sm:mt-20 lg:mt-24">
+                            <dl className="grid grid-cols-1 gap-x-8 gap-y-10 lg:grid-cols-2 lg:gap-y-16">
+                                <div className="relative pl-20">
+                                    <dt className="text-base font-semibold leading-7 text-gray-900"><FeatureIcon><svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></FeatureIcon>Respuesta Rápida</dt>
+                                    <dd className="mt-2 text-base leading-7 text-gray-600">Completa tu solicitud en minutos y recibe una respuesta el mismo día. Valoramos tu tiempo.</dd>
+                                </div>
+                                <div className="relative pl-20">
+                                    <dt className="text-base font-semibold leading-7 text-gray-900"><FeatureIcon><svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg></FeatureIcon>Términos Claros</dt>
+                                    <dd className="mt-2 text-base leading-7 text-gray-600">Sin letras pequeñas ni sorpresas. Sabrás exactamente cuánto pagarás desde el primer momento.</dd>
+                                </div>
+                            </dl>
+                        </div>
+                    </div>
                 </div>
 
                 {/* ========== SECCIÓN DE TESTIMONIOS (CARRUSEL) ========== */}
                 <section className="bg-white py-24 sm:py-32">
-                    {/* ... (sin cambios en esta sección) ... */}
+                    <div className="mx-auto max-w-7xl px-6 lg:px-8">
+                        <div className="mx-auto max-w-2xl text-center">
+                            <h2 className="text-lg font-semibold leading-8 tracking-tight text-indigo-600">Confianza y Satisfacción</h2>
+                            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">La experiencia de nuestros clientes</p>
+                        </div>
+                        <div className="relative mt-16">
+                            <div className="overflow-hidden relative h-56">
+                                {testimonials.map((testimonial, index) => (
+                                    <div key={index} className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentTestimonial ? 'opacity-100' : 'opacity-0'}`}>
+                                        <figure className="rounded-2xl bg-gray-50 p-8 text-sm leading-6 max-w-2xl mx-auto">
+                                            <blockquote className="text-center text-lg text-gray-900"><p>“{testimonial.quote}”</p></blockquote>
+                                            <figcaption className="mt-6 flex justify-center items-center gap-x-4">
+                                                <div>
+                                                    <div className="font-semibold text-gray-900">{testimonial.author}</div>
+                                                    <div className="text-gray-600">{testimonial.title}</div>
+                                                </div>
+                                            </figcaption>
+                                        </figure>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="mt-8 flex justify-center gap-x-3">
+                                {testimonials.map((_, index) => (
+                                    <button key={index} onClick={() => setCurrentTestimonial(index)} className={`h-2.5 w-2.5 rounded-full transition-colors ${currentTestimonial === index ? 'bg-indigo-600' : 'bg-gray-300 hover:bg-gray-400'}`} aria-label={`Go to slide ${index + 1}`}></button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
                 </section>
 
                 {/* ========== SECCIÓN DE LLAMADA A LA ACCIÓN (CTA) ========== */}
                 <div className="bg-white">
-                    {/* ... (sin cambios en esta sección) ... */}
+                    <div className="mx-auto max-w-7xl py-24 sm:px-6 sm:py-32 lg:px-8">
+                        <div className="relative isolate overflow-hidden bg-indigo-600 px-6 pt-16 shadow-2xl sm:rounded-3xl sm:px-16 md:pt-24 lg:flex lg:gap-x-20 lg:px-24 lg:pt-0">
+                            <svg viewBox="0 0 1024 1024" className="absolute left-1/2 top-1/2 -z-10 h-[64rem] w-[64rem] -translate-y-1/2 [mask-image:radial-gradient(closest-side,white,transparent)] sm:left-full sm:-ml-80 lg:left-1/2 lg:ml-0 lg:-translate-x-1/2 lg:translate-y-0" aria-hidden="true">
+                                <circle cx="512" cy="512" r="512" fill="url(#759c1415-0410-454c-8f7c-9a820de03641)" fillOpacity="0.7" />
+                                <defs><radialGradient id="759c1415-0410-454c-8f7c-9a820de03641"><stop stopColor="#7775D6" /><stop offset="1" stopColor="#E935C1" /></radialGradient></defs>
+                            </svg>
+                            <div className="mx-auto max-w-md text-center lg:mx-0 lg:flex-auto lg:py-32 lg:text-left">
+                                <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">¿Listo para empezar?</h2>
+                                <p className="mt-6 text-lg leading-8 text-indigo-100">Tu solución financiera está a solo un clic. Accede a tu cuenta o solicita tu préstamo ahora.</p>
+                                <div className="mt-10 flex items-center justify-center gap-x-6 lg:justify-start">
+                                    <Link to="/login" className="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-indigo-600 shadow-sm hover:bg-indigo-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Solicitar ahora</Link>
+                                    <a href="#features" className="text-sm font-semibold leading-6 text-white">Saber más <span aria-hidden="true">→</span></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             </main>
