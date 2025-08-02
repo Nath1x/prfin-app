@@ -1,199 +1,218 @@
-// C:\Users\1vkwi\prfin-app\frontend\src\pages\AdminDashboard.jsx
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+// src/pages/AdminDashboard.jsx
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+
+// --- Iconos para la Interfaz ---
+const Logo = () => <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#4338CA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M2 17L12 22L22 17" stroke="#4338CA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M2 12L12 17L22 12" stroke="#4338CA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+const HomeIcon = () => <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>;
+const UsersIcon = () => <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21a6 6 0 00-9-5.197m0 0A5.995 5.995 0 0112 13.5a5.995 5.995 0 013 1.182" /></svg>;
+const LoansIcon = () => <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>;
+const LogoutIcon = () => <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>;
+const CloseIcon = () => <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>;
+const PaymentsIcon = () => <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.75A.75.75 0 013 4.5h.75m0 0H21m-9 6h9" /></svg>;
+
 
 function AdminDashboard() {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // Estado para el formulario de nuevo usuario
+  // --- ESTADOS DE LA INTERFAZ ---
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [activeView, setActiveView] = useState('dashboard');
+  const [isUserModalOpen, setUserModalOpen] = useState(false);
+  const [isLoanModalOpen, setLoanModalOpen] = useState(false);
+  const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
+
+  // --- ESTADOS DE DATOS ---
+  const [users, setUsers] = useState([]);
+  const [loans, setLoans] = useState([]);
+  const [cobradoresList, setCobradoresList] = useState([]);
+  const [userPaymentsToRegister, setUserPaymentsToRegister] = useState([]);
+
+  // --- ESTADOS DE FORMULARIOS ---
   const [newUserName, setNewUserName] = useState('');
   const [newUserPhone, setNewUserPhone] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
-  // ¡NUEVO AJUSTE! Estado para el rol del nuevo usuario
-  const [newUserRole, setNewUserRole] = useState('cliente'); 
-  // ¡NUEVO ESTADO! Para el cobrador seleccionado al registrar nuevo usuario
-  const [selectedCobradorForNewUser, setSelectedCobradorForNewUser] = useState(''); 
-  const [registerMessage, setRegisterMessage] = useState('');
-  const [registerError, setRegisterError] = useState('');
-
-  // Estado para el formulario de nuevo préstamo
-   const [selectedUserId, setSelectedUserId] = useState('');
-   const [montoPrestamo, setMontoPrestamo] = useState('');
-   const [plazoDias, setPlazoDias] = useState('');
-  const [loanMessage, setLoanMessage] = useState('');
-  const [loanError, setLoanError] = useState('');
-
-  // ESTADOS para el formulario de registro de pago
-   const [selectedUserForPayment, setSelectedUserForPayment] = useState('');
-   const [userPaymentsToRegister, setUserPaymentsToRegister] = useState([]); 
-   const [selectedPaymentId, setSelectedPaymentId] = useState('');
-   const [paymentAmount, setPaymentAmount] = useState('');
-   const [paymentRef, setPaymentRef] = useState('');
-   const [paymentMessage, setPaymentMessage] = useState('');
-   const [paymentError, setPaymentError] = useState('');
+  const [newUserRole, setNewUserRole] = useState('cliente');
+  const [selectedCobradorForNewUser, setSelectedCobradorForNewUser] = useState('');
+  
+  const [selectedUserId, setSelectedUserId] = useState('');
+  const [montoPrestamo, setMontoPrestamo] = useState('');
+  const [plazoDias, setPlazoDias] = useState('29');
+  
+  const [selectedUserForPayment, setSelectedUserForPayment] = useState('');
+  const [selectedPaymentId, setSelectedPaymentId] = useState('');
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentRef, setPaymentRef] = useState('');
 
 
-  // ESTADOS para listar y gestionar préstamos
-  const [loans, setLoans] = useState([]);
-  const [deleteLoanMessage, setDeleteLoanMessage] = useState('');
-  const [deleteLoanError, setDeleteLoanError] = useState('');
-
-  // ¡NUEVO ESTADO! Para guardar la lista de cobradores
-  const [cobradoresList, setCobradoresList] = useState([]);
-
-
-  // Función para cargar usuarios (se usará en useEffect y al registrar usuario/préstamo/pago)
-  const fetchUsers = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-          navigate('/login');
-          return;
-      }
-      setLoading(true); 
-      try {
-          const response = await fetch(import.meta.env.VITE_API_URL + '/api/admin/usuarios', {
-              headers: {
-                  'Authorization': `Bearer ${token}`
-              }
-          });
-          const data = await response.json();
-          if (response.ok) {
-              setUsers(data);
-              // ¡AJUSTE CLAVE AQUÍ! Filtra los cobradores de la lista de usuarios
-              setCobradoresList(data.filter(user => user.rol === 'cobrador'));
-          } else {
-              if (response.status === 401 || response.status === 403) {
-                  localStorage.removeItem('token');
-                  navigate('/login');
-                  return;
-              }
-              throw new Error(data.error || 'Error al cargar usuarios.');
-          }
-      } catch (err) {
-          console.error('Error al cargar usuarios:', err);
-          setError(err.message || 'Error desconocido al cargar usuarios.');
-          if (err.message.includes('Unauthorized') || err.message.includes('Forbidden')) {
-              localStorage.removeItem('token');
-              navigate('/login');
-          }
-      } finally { 
-          setLoading(false); 
-      }
+  // --- LÓGICA DE NOTIFICACIONES ---
+  const showNotification = (message, type = 'success') => {
+    setNotification({ show: true, message, type });
+    setTimeout(() => {
+      setNotification({ show: false, message: '', type: 'success' });
+    }, 3000);
   };
 
-  // Función para obtener pagos pendientes/parciales de un usuario para el formulario de pago
-  const fetchUserPaymentsForRegistration = async (userId) => {
-    if (!userId) {
-        setUserPaymentsToRegister([]);
-        return;
+  // --- LÓGICA DE OBTENCIÓN DE DATOS (FETCHING) ---
+  const fetchAllData = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
     }
+    setLoading(true);
+    try {
+      const [usersResponse, loansResponse] = await Promise.all([
+        fetch('https://prfin-backend.onrender.com/api/admin/usuarios', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('https://prfin-backend.onrender.com/api/admin/prestamos', { headers: { 'Authorization': `Bearer ${token}` } })
+      ]);
+
+      const usersData = await usersResponse.json();
+      const loansData = await loansResponse.json();
+
+      if (usersResponse.ok) {
+        setUsers(usersData);
+        setCobradoresList(usersData.filter(user => user.rol === 'cobrador'));
+      } else {
+        throw new Error(usersData.error || 'Error al cargar usuarios.');
+      }
+
+      if (loansResponse.ok) {
+        setLoans(loansData);
+      } else {
+        throw new Error(loansData.error || 'Error al cargar préstamos.');
+      }
+
+    } catch (err) {
+      console.error('Error al cargar datos:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUserPaymentsForRegistration = async (userId) => {
+    if (!userId) { setUserPaymentsToRegister([]); return; }
     const token = localStorage.getItem('token');
     try {
-        const response = await fetch(import.meta.env.VITE_API_URL + `/api/admin/pagos/${userId}`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
+        const response = await fetch(`https://prfin-backend.onrender.com/api/admin/pagos/${userId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json(); 
         if (response.ok) {
-            const pendingOrPartial = data.filter(p => 
-                p.estado === 'PENDIENTE' || 
-                p.estado === 'ATRASADO' || 
-                (p.estado === 'PARCIAL' && Number(p.monto_pagado) < Number(p.monto_cuota)) 
-            );
-            setUserPaymentsToRegister(pendingOrPartial);
+            setUserPaymentsToRegister(data.filter(p => p.estado !== 'PAGADO'));
         } else {
-            setPaymentError(data.error || 'Error al cargar pagos del usuario para registro.');
-            setUserPaymentsToRegister([]);
+            throw new Error(data.error || 'Error al cargar pagos del usuario.');
         }
     } catch (err) {
-        console.error('Error al cargar pagos del usuario para registro:', err);
-        setPaymentError('Error de red al cargar pagos.');
-        setUserPaymentsToRegister([]);
+        console.error('Error al cargar pagos del usuario:', err);
+        showNotification(err.message, 'error');
     }
   };
 
-  // Función: Obtener todos los préstamos (para la tabla de préstamos)
-  const fetchLoans = async () => {
+
+  // --- LÓGICA DE MANEJO DE FORMULARIOS Y ACCIONES ---
+  const handleRegisterUser = async (e) => {
+    e.preventDefault();
     const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
     try {
-      const response = await fetch(import.meta.env.VITE_API_URL + '/api/admin/prestamos', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await fetch('https://prfin-backend.onrender.com/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({
+          nombre_completo: newUserName,
+          telefono_whatsapp: newUserPhone,
+          password: newUserPassword,
+          rol: newUserRole,
+          cobrador_asignado_id: selectedCobradorForNewUser || null 
+        }),
       });
       const data = await response.json();
       if (response.ok) {
-        setLoans(data);
-      } else {
-        setDeleteLoanError(data.error || 'Error al cargar préstamos.'); 
-      }
+        showNotification(data.message);
+        setNewUserName(''); setNewUserPhone(''); setNewUserPassword(''); setNewUserRole('cliente'); setSelectedCobradorForNewUser('');
+        setUserModalOpen(false);
+        fetchAllData();
+      } else { throw new Error(data.error); }
     } catch (err) {
-      console.error('Error al cargar préstamos:', err);
-      setDeleteLoanError('Error de red al cargar préstamos.');
-    } finally {
-        setLoading(false); 
+      showNotification(err.message, 'error');
+    } 
+  };
+  
+  const handleRegisterLoan = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch('https://prfin-backend.onrender.com/api/admin/prestamos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({
+          usuario_id: selectedUserId,
+          monto_prestamo: parseFloat(montoPrestamo),
+          plazo_dias: parseInt(plazoDias),
+        }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        showNotification(data.message);
+        setSelectedUserId(''); setMontoPrestamo(''); setPlazoDias('29');
+        setLoanModalOpen(false);
+        fetchAllData();
+      } else { throw new Error(data.error); }
+    } catch (err) {
+      showNotification(err.message, 'error');
     }
   };
 
-  const handleDeleteLoan = async (loanId) => {
-    setDeleteLoanMessage('');
-    setDeleteLoanError('');
-
+  const handleRegisterPayment = async (e) => {
+    e.preventDefault();
     const token = localStorage.getItem('token');
-    if (!token) {
-      setDeleteLoanError('No autenticado. Por favor, inicia sesión de nuevo.');
-      navigate('/login');
-      return;
+    try {
+      const response = await fetch('https://prfin-backend.onrender.com/api/admin/pagar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({
+          pago_id: selectedPaymentId,
+          monto_pagado: parseFloat(paymentAmount),
+          referencia_pago: paymentRef
+        }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        showNotification(data.message);
+        setSelectedUserForPayment(''); setSelectedPaymentId(''); setPaymentAmount(''); setPaymentRef('');
+        fetchAllData();
+      } else { throw new Error(data.error); }
+    } catch (err) {
+      showNotification(err.message, 'error');
     }
-
-    if (window.confirm('¿Estás seguro de que quieres eliminar este préstamo? Esto borrará todas sus cuotas asociadas y ajustará el saldo del usuario.')) {
+  };
+  
+  const handleDeleteLoan = async (loanId) => {
+    const token = localStorage.getItem('token');
+    if (window.confirm('¿Estás seguro de que quieres eliminar este préstamo? Esta acción no se puede deshacer.')) {
         try {
-            const response = await fetch(import.meta.env.VITE_API_URL + `/api/admin/prestamos/${loanId}`, {
+            const response = await fetch(`https://prfin-backend.onrender.com/api/admin/prestamos/${loanId}`, {
                 method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: { 'Authorization': `Bearer ${token}` }
             });
-
             const data = await response.json();
-
             if (response.ok) {
-                setDeleteLoanMessage(data.message);
-                fetchUsers(); // Recargar usuarios para actualizar saldos
-                fetchLoans(); // Recargar la lista de préstamos
-                if (selectedUserForPayment) {
-                    fetchUserPaymentsForRegistration(selectedUserForPayment);
-                }
-            } else {
-                setDeleteLoanError(data.error || 'Error al eliminar préstamo.');
-            }
+                showNotification(data.message);
+                fetchAllData();
+            } else { throw new Error(data.error); }
         } catch (err) {
-            console.error('Error de red al eliminar préstamo:', err);
-            setDeleteLoanError('No se pudo conectar al servidor para eliminar préstamo.');
+            showNotification(err.message, 'error');
         }
     }
   };
 
-
-  // useEffect principal para cargar usuarios y préstamos al inicio
+  // --- EFECTOS ---
   useEffect(() => {
-    const loadAllData = async () => {
-        await fetchUsers(); 
-        await fetchLoans();
-    };
-    loadAllData();
+    fetchAllData();
   }, [navigate]);
 
-
-  // useEffect para recargar cuotas cuando cambia el usuario seleccionado para pagar
   useEffect(() => {
     if (selectedUserForPayment) {
         fetchUserPaymentsForRegistration(selectedUserForPayment);
@@ -206,509 +225,200 @@ function AdminDashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('role');
     navigate('/login');
   };
 
-  const handleRegisterUser = async (e) => {
-    e.preventDefault();
-    setRegisterMessage('');
-    setRegisterError('');
+  // --- CÁLCULO DE MÉTRICAS ---
+  const totalUsers = users.length;
+  const activeLoans = loans.filter(loan => loan.estado === 'ACTIVO').length;
+  const totalPending = users.reduce((acc, user) => acc + parseFloat(user.saldo_pendiente_total || 0), 0);
 
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setRegisterError('No autenticado. Por favor, inicia sesión de nuevo.');
-      navigate('/login');
-      return;
-    }
-
-    try {
-      // ¡AJUSTE CLAVE AQUÍ! Enviar el rol seleccionado y el cobrador_asignado_id
-      const response = await fetch(import.meta.env.VITE_API_URL + '/api/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
-        },
-        body: JSON.stringify({
-          nombre_completo: newUserName,
-          telefono_whatsapp: newUserPhone,
-          password: newUserPassword,
-          rol: newUserRole, // ¡NUEVO AJUSTE! Enviamos el rol seleccionado
-          cobrador_asignado_id: selectedCobradorForNewUser || null 
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setRegisterMessage(data.message);
-        setNewUserName('');
-        setNewUserPhone('');
-        setNewUserPassword('');
-        setNewUserRole('cliente'); // Resetea a 'cliente' por defecto después del registro
-        setSelectedCobradorForNewUser(''); // ¡NUEVO! Limpia el selector de cobrador
-        fetchUsers(); // Volver a cargar la lista de usuarios y cobradores
-
-        if (selectedUserForPayment) { 
-            fetchUserPaymentsForRegistration(selectedUserForPayment);
-        }
-
-      } else {
-        setRegisterError(data.error || 'Error al registrar usuario.');
-      }
-    } catch (err) {
-      console.error('Error de red al registrar usuario:', err);
-      setRegisterError('No se pudo conectar al servidor para registrar usuario.');
-    } 
-  };
-
-  const handleRegisterLoan = async (e) => {
-    e.preventDefault();
-    setLoanMessage('');
-    setLoanError('');
-
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setLoanError('No autenticado. Por favor, inicia sesión de nuevo.');
-      navigate('/login');
-      return;
-    }
-
-    if (isNaN(parseFloat(montoPrestamo)) || isNaN(parseInt(plazoDias))) { 
-        setLoanError('El monto del préstamo y el plazo deben ser números válidos.');
-        return;
-    }
-
-
-    try {
-      const response = await fetch(import.meta.env.VITE_API_URL + '/api/admin/prestamos', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          usuario_id: selectedUserId,
-          monto_prestamo: parseFloat(montoPrestamo),
-          plazo_dias: parseInt(plazoDias),
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setLoanMessage(data.message + ` Monto total a pagar: $${Number(data.prestamo.monto_total_a_pagar).toFixed(2)}. Cuota diaria: $${Number(data.prestamo.monto_cuota_diaria).toFixed(2)}`);
-        setSelectedUserId('');
-        setMontoPrestamo('');
-        setPlazoDias('');
-        fetchUsers(); // Recargar usuarios
-        fetchLoans(); // Recargar préstamos
-        if (selectedUserId === selectedUserForPayment) {
-            fetchUserPaymentsForRegistration(selectedUserForPayment);
-        }
-
-      } else {
-        setLoanError(data.error || 'Error al registrar préstamo.');
-      }
-    } catch (err) {
-      console.error('Error de red al registrar préstamo:', err);
-      setLoanError('No se pudo conectar al servidor para registrar préstamo.');
-    }
-  };
-
-  const handleRegisterPayment = async (e) => {
-    e.preventDefault();
-    setPaymentMessage('');
-    setPaymentError('');
-
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setPaymentError('No autenticado. Por favor, inicia sesión de nuevo.');
-      navigate('/login');
-      return;
-    }
-
-    if (!selectedPaymentId || !paymentAmount) {
-        setPaymentError('Por favor, selecciona una cuota y un monto a pagar.');
-        return;
-    }
-
-    const parsedPaymentAmount = parseFloat(paymentAmount);
-    if (isNaN(parsedPaymentAmount) || parsedPaymentAmount <= 0) {
-        setPaymentError('Monto a pagar debe ser un número válido y mayor a cero.');
-        return;
-    }
-
-    try {
-      const response = await fetch(import.meta.env.VITE_API_URL + '/api/admin/pagar', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          pago_id: selectedPaymentId,
-          monto_pagado: parsedPaymentAmount,
-          referencia_pago: paymentRef
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setPaymentMessage(data.message);
-        setSelectedPaymentId('');
-        setPaymentAmount('');
-        setPaymentRef('');
-        fetchUsers(); // Recargar usuarios
-        fetchLoans(); // Recargar préstamos
-        if (selectedUserForPayment) {
-            fetchUserPaymentsForRegistration(selectedUserForPayment);
-        }
-
-      } else {
-        setPaymentError(data.error || 'Error al registrar pago.');
-      }
-    } catch (err) {
-      console.error('Error de red al registrar pago:', err);
-      setPaymentError('No se pudo conectar al servidor para registrar pago.');
-    }
-  };
-
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center font-sans">
-        <p className="text-gray-700 text-xl">Cargando panel de administración...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center font-sans">
-        <div className="bg-white p-8 rounded-lg shadow-lg text-center max-w-md w-full">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Error al Cargar</h2>
-          <p className="text-gray-700 mb-6">{error}</p>
-          <button
-            onClick={handleLogout}
-            className="bg-blue-600 text-white p-2 rounded-md font-semibold hover:bg-blue-700 transition duration-300"
-          >
-            Volver a Login
-          </button>
-        </div>
-      </div>
-    );
-  }
-
+  // --- RENDERIZADO DEL COMPONENTE ---
   return (
-    <div className="min-h-screen bg-gray-100 p-4 font-sans">
-      <header className="flex justify-between items-center bg-white p-4 rounded-lg shadow-md mb-6">
-        <h1 className="text-2xl font-bold text-blue-700">PrFin - Panel de Administración</h1>
-        <button
-          onClick={handleLogout}
-          className="bg-red-500 text-white p-2 rounded-md font-semibold hover:bg-red-600 transition duration-300 text-sm"
-        >
-          Cerrar Sesión
-        </button>
-      </header>
+    <div className="flex min-h-screen bg-gray-100 font-sans">
+      {/* --- SIDEBAR --- */}
+      <aside className="w-64 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col">
+        <div className="h-16 flex items-center justify-center px-4 border-b border-gray-200">
+          <Link to="/" className="flex items-center gap-x-2"><Logo /><span className="font-semibold text-gray-800 text-lg">PrFin-App</span></Link>
+        </div>
+        <nav className="flex-1 px-4 py-6 space-y-2">
+          <button onClick={() => setActiveView('dashboard')} className={`w-full flex items-center gap-x-3 px-3 py-2 rounded-md text-sm font-medium ${activeView === 'dashboard' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'}`}><HomeIcon /> Dashboard</button>
+          <button onClick={() => setActiveView('users')} className={`w-full flex items-center gap-x-3 px-3 py-2 rounded-md text-sm font-medium ${activeView === 'users' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'}`}><UsersIcon /> Usuarios</button>
+          <button onClick={() => setActiveView('loans')} className={`w-full flex items-center gap-x-3 px-3 py-2 rounded-md text-sm font-medium ${activeView === 'loans' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'}`}><LoansIcon /> Préstamos</button>
+          <button onClick={() => setActiveView('payments')} className={`w-full flex items-center gap-x-3 px-3 py-2 rounded-md text-sm font-medium ${activeView === 'payments' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'}`}><PaymentsIcon /> Registrar Pago</button>
+        </nav>
+        <div className="px-4 py-4 border-t border-gray-200">
+          <button onClick={handleLogout} className="w-full flex items-center gap-x-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100"><LogoutIcon /> Cerrar Sesión</button>
+        </div>
+      </aside>
 
-      <main className="container mx-auto">
-        {/* Formulario para agregar nuevo usuario */}
-        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Agregar Nuevo Usuario</h2>
-            <form onSubmit={handleRegisterUser} className="space-y-4">
+      {/* --- CONTENIDO PRINCIPAL --- */}
+      <main className="flex-1 p-8 overflow-auto">
+        {loading ? <div className="text-center text-gray-500">Cargando datos...</div> : error ? <div className="text-center text-red-600 p-4 bg-red-50 rounded-md">Error: {error}</div> :
+        <div className="max-w-7xl mx-auto">
+            {/* VISTA: DASHBOARD */}
+            {activeView === 'dashboard' && (
                 <div>
-                    <input
-                        type="text"
-                        placeholder="Nombre Completo"
-                        className="w-full p-3 border border-gray-300 rounded-md"
-                        value={newUserName}
-                        onChange={(e) => setNewUserName(e.target.value)}
-                        required
-                    />
-                </div>
-                <div>
-                    <input
-                        type="text"
-                        placeholder="Teléfono WhatsApp (ej. +521234567890)"
-                        className="w-full p-3 border border-gray-300 rounded-md"
-                        value={newUserPhone}
-                        onChange={(e) => setNewUserPhone(e.target.value)}
-                        required
-                    />
-                </div>
-                <div>
-                    <input
-                        type="password"
-                        placeholder="Contraseña Inicial"
-                        className="w-full p-3 border border-gray-300 rounded-md"
-                        value={newUserPassword}
-                        onChange={(e) => setNewUserPassword(e.target.value)}
-                        required
-                    />
-                </div>
-                {/* ¡NUEVO AJUSTE! Selector para el Rol del nuevo usuario */}
-                <div>
-                    <select
-                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value={newUserRole}
-                        onChange={(e) => setNewUserRole(e.target.value)}
-                        required
-                    >
-                        <option value="cliente">Cliente</option>
-                        <option value="cobrador">Cobrador</option>
-                        {/* Opcional: <option value="admin">Administrador</option> si quieres crear admins desde aquí */}
-                    </select>
-                </div>
-                {/* ¡AJUSTE CLAVE AQUÍ! Selector para asignar cobrador */}
-                {cobradoresList.length > 0 && newUserRole === 'cliente' && ( // Solo muestra si hay cobradores y el rol es 'cliente'
-                    <div>
-                        <select
-                            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            value={selectedCobradorForNewUser}
-                            onChange={(e) => setSelectedCobradorForNewUser(e.target.value)}
-                        >
-                            <option value="">-- Asignar Cobrador (Opcional) --</option>
-                            {cobradoresList.map(cobrador => (
-                                <option key={cobrador.id} value={cobrador.id}>
-                                    {cobrador.nombre_completo} ({cobrador.telefono_whatsapp})
-                                </option>
-                            ))}
-                        </select>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-8">Dashboard General</h1>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-100"><p className="text-sm font-medium text-gray-500">Total de Usuarios</p><p className="text-3xl font-bold text-gray-900">{totalUsers}</p></div>
+                        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-100"><p className="text-sm font-medium text-gray-500">Préstamos Activos</p><p className="text-3xl font-bold text-gray-900">{activeLoans}</p></div>
+                        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-100"><p className="text-sm font-medium text-gray-500">Saldo Pendiente Total</p><p className="text-3xl font-bold text-gray-900">${totalPending.toLocaleString('es-MX', {minimumFractionDigits: 2})}</p></div>
                     </div>
-                )}
-                <button
-                    type="submit"
-                    className="bg-green-600 text-white p-3 rounded-md font-semibold hover:bg-green-700 transition duration-300"
-                >
-                    Registrar Usuario
-                </button>
-            </form>
-            {registerMessage && <p className="mt-4 text-green-600">{registerMessage}</p>}
-            {registerError && <p className="mt-4 text-red-600">{registerError}</p>}
-        </div>
-
-        {/* Formulario para registrar un nuevo préstamo (MODIFICADO) */}
-        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Registrar Nuevo Préstamo</h2>
-            <form onSubmit={handleRegisterLoan} className="space-y-4">
-                <div>
-                    <select
-                        className="w-full p-3 border border-gray-300 rounded-md"
-                        value={selectedUserId}
-                        onChange={(e) => setSelectedUserId(e.target.value)}
-                        required
-                    >
-                        <option value="">Selecciona un Usuario</option>
-                        {users.map(user => (
-                            <option key={user.id} value={user.id}>
-                                {user.nombre_completo} ({user.telefono_whatsapp})
-                            </option>
-                        ))}
-                    </select>
                 </div>
+            )}
+            
+            {/* VISTA: USUARIOS */}
+            {activeView === 'users' && (
                 <div>
-                    <input
-                        type="number"
-                        step="0.01"
-                        placeholder="Monto del Préstamo (ej. 1000.00)"
-                        className="w-full p-3 border border-gray-300 rounded-md"
-                        value={montoPrestamo}
-                        onChange={(e) => setMontoPrestamo(e.target.value)}
-                        required
-                    />
-                </div>
-                <div>
-                    <input
-                        type="number"
-                        step="1"
-                        placeholder="Plazo en Días (ej. 30)"
-                        className="w-full p-3 border border-gray-300 rounded-md"
-                        value={plazoDias}
-                        onChange={(e) => setPlazoDias(e.target.value)}
-                        required
-                    />
-                </div>
-                <button
-                    type="submit"
-                    className="bg-blue-600 text-white p-3 rounded-md font-semibold hover:bg-blue-700 transition duration-300"
-                >
-                    Registrar Préstamo
-                </button>
-            </form>
-            {loanMessage && <p className="mt-4 text-green-600">{loanMessage}</p>}
-            {loanError && <p className="mt-4 text-red-600">{loanError}</p>}
-        </div>
-
-
-        {/* Formulario para registrar un pago */}
-        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Registrar Pago</h2>
-            <form onSubmit={handleRegisterPayment} className="space-y-4">
-                <div>
-                    <select
-                        className="w-full p-3 border border-gray-300 rounded-md"
-                        value={selectedUserForPayment}
-                        onChange={(e) => setSelectedUserForPayment(e.target.value)}
-                        required
-                    >
-                        <option value="">Selecciona un Usuario para el Pago</option>
-                        {users.map(user => (
-                            <option key={user.id} value={user.id}>
-                                {user.nombre_completo} ({user.telefono_whatsapp})
-                            </option>
-                        ))}
-                    </select>
-                </div>
-                {selectedUserForPayment && userPaymentsToRegister.length > 0 && (
-                    <div>
-                        <select
-                            className="w-full p-3 border border-gray-300 rounded-md"
-                            value={selectedPaymentId}
-                            onChange={(e) => setSelectedPaymentId(e.target.value)}
-                            required
-                        >
-                            <option value="">Selecciona una Cuota</option>
-                            {userPaymentsToRegister.map(payment => (
-                                <option key={payment.id} value={payment.id}>
-                                    {new Date(payment.fecha_cuota).toLocaleDateString()} - ${Number(payment.monto_cuota || 0).toFixed(2)} ({payment.estado}) - Pagado: ${Number(payment.monto_pagado || 0).toFixed(2)}
-                                </option>
-                            ))}
-                        </select>
+                    <div className="flex justify-between items-center mb-8">
+                        <h1 className="text-3xl font-bold text-gray-900">Gestión de Usuarios</h1>
+                        <button onClick={() => setUserModalOpen(true)} className="bg-indigo-600 text-white px-4 py-2 rounded-md shadow-sm hover:bg-indigo-700 transition-transform hover:scale-105">+ Registrar Usuario</button>
                     </div>
-                )}
-                {selectedUserForPayment && userPaymentsToRegister.length === 0 && (
-                    <p className="text-gray-500 text-sm">Este usuario no tiene cuotas pendientes o parciales.</p>
-                )}
-                <div>
-                    <input
-                        type="number"
-                        step="0.01"
-                        placeholder="Monto a Pagar (ej. 50.00)"
-                        className="w-full p-3 border border-gray-300 rounded-md"
-                        value={paymentAmount}
-                        onChange={(e) => setPaymentAmount(e.target.value)}
-                        required
-                    />
+                    <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo Pendiente</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cobrador</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {users.map(user => (
+                                        <tr key={user.id} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.nombre_completo}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.telefono_whatsapp}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.rol === 'admin' ? 'bg-red-100 text-red-800' : user.rol === 'cobrador' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>{user.rol}</span></td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${parseFloat(user.saldo_pendiente_total || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.cobrador_asignado_id ? (cobradoresList.find(c => String(c.id) === String(user.cobrador_asignado_id))?.nombre_completo || 'N/A') : 'N/A'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <input
-                        type="text"
-                        placeholder="Referencia de Pago (Opcional)"
-                        className="w-full p-3 border border-gray-300 rounded-md"
-                        value={paymentRef}
-                        onChange={(e) => setPaymentRef(e.target.value)}
-                    />
-                </div>
-                <button
-                    type="submit"
-                    className="bg-purple-600 text-white p-3 rounded-md font-semibold hover:bg-purple-700 transition duration-300"
-                >
-                    Registrar Abono
-                </button>
-            </form>
-            {paymentMessage && <p className="mt-4 text-green-600">{paymentMessage}</p>}
-            {paymentError && <p className="mt-4 text-red-600">{paymentError}</p>}
-        </div>
+            )}
 
-        {/* Lista de Préstamos */}
-        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Lista de Préstamos</h2>
-            {deleteLoanMessage && <p className="mb-4 text-green-600">{deleteLoanMessage}</p>}
-            {deleteLoanError && <p className="mb-4 text-red-600">{deleteLoanError}</p>}
-            {loans.length === 0 ? (
-                <p className="text-gray-500 text-center">No hay préstamos registrados aún.</p>
-            ) : (
-                <div className="overflow-x-auto">
-                    <table className="min-w-full bg-white border border-gray-200">
-                        <thead>
-                            <tr>
-                                <th className="py-2 px-4 border-b text-left text-gray-600">ID Préstamo</th>
-                                <th className="py-2 px-4 border-b text-left text-gray-600">Usuario</th>
-                                <th className="py-2 px-4 border-b text-left text-gray-600">Monto Capital</th>
-                                <th className="py-2 px-4 border-b text-left text-gray-600">Monto Total</th>
-                                <th className="py-2 px-4 border-b text-left text-gray-600">Cuota Diaria</th>
-                                <th className="py-2 px-4 border-b text-left text-gray-600">Plazo (Días)</th>
-                                <th className="py-2 px-4 border-b text-left text-gray-600">Fecha Inicio</th>
-                                <th className="py-2 px-4 border-b text-left text-gray-600">Estado</th>
-                                <th className="py-2 px-4 border-b text-left text-gray-600">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loans.map((loan) => (
-                                <tr key={loan.id} className="hover:bg-gray-50">
-                                    <td className="py-2 px-4 border-b text-sm">{loan.id}</td>
-                                    <td className="py-2 px-4 border-b">{loan.nombre_completo}</td>
-                                    <td className="py-2 px-4 border-b">${Number(loan.monto_capital || 0).toFixed(2)}</td>
-                                    <td className="py-2 px-4 border-b">${Number(loan.monto_total_a_pagar || 0).toFixed(2)}</td>
-                                    <td className="py-2 px-4 border-b">${Number(loan.monto_cuota_diaria || 0).toFixed(2)}</td>
-                                    <td className="py-2 px-4 border-b">{loan.plazo_dias}</td>
-                                    <td className="py-2 px-4 border-b">{new Date(loan.fecha_inicio).toLocaleDateString()}</td>
-                                    <td className="py-2 px-4 border-b">{loan.estado_prestamo}</td>
-                                    <td className="py-2 px-4 border-b">
-                                        <button
-                                            onClick={() => handleDeleteLoan(loan.id)}
-                                            className="bg-red-500 text-white p-1 rounded-md text-xs hover:bg-red-600 transition duration-300"
-                                        >
-                                            Eliminar
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+            {/* VISTA: PRÉSTAMOS */}
+            {activeView === 'loans' && (
+                <div>
+                    <div className="flex justify-between items-center mb-8">
+                        <h1 className="text-3xl font-bold text-gray-900">Gestión de Préstamos</h1>
+                        <button onClick={() => setLoanModalOpen(true)} className="bg-indigo-600 text-white px-4 py-2 rounded-md shadow-sm hover:bg-indigo-700 transition-transform hover:scale-105">+ Nuevo Préstamo</button>
+                    </div>
+                    <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto Total</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cuota Diaria</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Inicio</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {loans.map(loan => (
+                                        <tr key={loan.id} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{loan.nombre_completo}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${parseFloat(loan.monto_total_a_pagar || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${parseFloat(loan.monto_cuota_diaria || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(loan.fecha_inicio).toLocaleDateString()}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${loan.estado === 'PAGADO' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>{loan.estado}</span></td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm"><button onClick={() => handleDeleteLoan(loan.id)} className="text-red-600 hover:text-red-900">Eliminar</button></td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* VISTA: REGISTRAR PAGO */}
+            {activeView === 'payments' && (
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-8">Registrar un Pago</h1>
+                    <div className="bg-white p-8 rounded-lg shadow-md max-w-lg mx-auto">
+                        <form onSubmit={handleRegisterPayment} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Cliente</label>
+                                <select value={selectedUserForPayment} onChange={(e) => setSelectedUserForPayment(e.target.value)} required className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="">Selecciona un cliente...</option>
+                                    {users.filter(u => u.rol === 'cliente').map(user => (<option key={user.id} value={user.id}>{user.nombre_completo}</option>))}
+                                </select>
+                            </div>
+                            {selectedUserForPayment && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Cuota a Pagar</label>
+                                    <select value={selectedPaymentId} onChange={(e) => setSelectedPaymentId(e.target.value)} required className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                                        <option value="">Selecciona una cuota...</option>
+                                        {userPaymentsToRegister.map(p => (<option key={p.id} value={p.id}>{new Date(p.fecha_cuota).toLocaleDateString()} - ${parseFloat(p.monto_cuota).toFixed(2)} ({p.estado})</option>))}
+                                    </select>
+                                </div>
+                            )}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Monto del Abono</label>
+                                <input type="number" step="0.01" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} placeholder="50.00" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Referencia (Opcional)</label>
+                                <input type="text" value={paymentRef} onChange={(e) => setPaymentRef(e.target.value)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/>
+                            </div>
+                            <div className="pt-4"><button type="submit" className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">Registrar Abono</button></div>
+                        </form>
+                    </div>
                 </div>
             )}
         </div>
-
-
-        {/* Lista de Usuarios */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Lista de Usuarios</h2>
-          {users.length === 0 ? (
-            <p className="text-gray-500 text-center">No hay usuarios registrados aún.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-white border border-gray-200">
-                <thead>
-                  <tr>
-                    <th className="py-2 px-4 border-b text-left text-gray-600">ID Usuario</th>
-                    <th className="py-2 px-4 border-b text-left text-gray-600">Nombre</th>
-                    <th className="py-2 px-4 border-b text-left text-gray-600">Teléfono</th>
-                    <th className="py-2 px-4 border-b text-left text-gray-600">Saldo Pendiente</th>
-                    <th className="py-2 px-4 border-b text-left text-gray-600">Estado</th>
-                    <th className="py-2 px-4 border-b text-left text-gray-600">Rol</th> 
-                    <th className="py-2 px-4 border-b text-left text-gray-600">Cobrador Asignado</th> 
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50">
-                      <td className="py-2 px-4 border-b">{user.id}</td>
-                      <td className="py-2 px-4 border-b">{user.nombre_completo}</td>
-                      <td className="py-2 px-4 border-b">{user.telefono_whatsapp}</td>
-                      <td className="py-2 px-4 border-b">${Number(user.saldo_pendiente_total || 0).toFixed(2)}</td>
-                      <td className="py-2 px-4 border-b">
-                        <span className={`font-semibold ${user.activo ? 'text-green-600' : 'text-red-600'}`}>
-                          {user.activo ? 'Activo' : 'Inactivo'}
-                        </span>
-                      </td>
-                      <td className="py-2 px-4 border-b">{user.rol}</td> 
-                      {/* ¡AJUSTE CLAVE AQUÍ! Mostrar nombre del cobrador en lugar de solo ID */}
-                      <td className="py-2 px-4 border-b">
-                        {user.cobrador_asignado_id 
-                            ? (cobradoresList.find(c => String(c.id) === String(user.cobrador_asignado_id))?.nombre_completo || user.cobrador_asignado_id) 
-                            : 'N/A'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+        }
       </main>
+
+       {/* --- MODALES --- */}
+       {isUserModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md">
+                <div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold">Registrar Nuevo Usuario</h2><button onClick={() => setUserModalOpen(false)} className="text-gray-500 hover:text-gray-800"><CloseIcon /></button></div>
+                <form onSubmit={handleRegisterUser} className="space-y-4">
+                    <div><label className="block text-sm font-medium text-gray-700">Nombre Completo</label><input type="text" value={newUserName} onChange={(e) => setNewUserName(e.target.value)} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/></div>
+                    <div><label className="block text-sm font-medium text-gray-700">Teléfono WhatsApp</label><input type="text" value={newUserPhone} onChange={(e) => setNewUserPhone(e.target.value)} placeholder="+52..." required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/></div>
+                    <div><label className="block text-sm font-medium text-gray-700">Contraseña</label><input type="password" value={newUserPassword} onChange={(e) => setNewUserPassword(e.target.value)} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/></div>
+                    <div><label className="block text-sm font-medium text-gray-700">Rol</label><select value={newUserRole} onChange={(e) => setNewUserRole(e.target.value)} required className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"><option value="cliente">Cliente</option><option value="cobrador">Cobrador</option><option value="admin">Administrador</option></select></div>
+                    {newUserRole === 'cliente' && (<div><label className="block text-sm font-medium text-gray-700">Asignar Cobrador (Opcional)</label><select value={selectedCobradorForNewUser} onChange={(e) => setSelectedCobradorForNewUser(e.target.value)} className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"><option value="">-- Sin asignar --</option>{cobradoresList.map(c => (<option key={c.id} value={c.id}>{c.nombre_completo}</option>))}</select></div>)}
+                    <div className="pt-4 flex justify-end"><button type="button" onClick={() => setUserModalOpen(false)} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md mr-2 hover:bg-gray-300">Cancelar</button><button type="submit" className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Registrar</button></div>
+                </form>
+            </div>
+        </div>
+      )}
+      
+       {isLoanModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md">
+                <div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold">Registrar Nuevo Préstamo</h2><button onClick={() => setLoanModalOpen(false)} className="text-gray-500 hover:text-gray-800"><CloseIcon /></button></div>
+                <form onSubmit={handleRegisterLoan} className="space-y-4">
+                    <div><label className="block text-sm font-medium text-gray-700">Cliente</label><select value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)} required className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"><option value="">Selecciona un cliente...</option>{users.filter(u => u.rol === 'cliente').map(user => (<option key={user.id} value={user.id}>{user.nombre_completo}</option>))}</select></div>
+                    <div><label className="block text-sm font-medium text-gray-700">Monto del Préstamo</label><input type="number" step="0.01" value={montoPrestamo} onChange={(e) => setMontoPrestamo(e.target.value)} placeholder="1000.00" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/></div>
+                    <div><label className="block text-sm font-medium text-gray-700">Plazo en Días</label><input type="number" value={plazoDias} onChange={(e) => setPlazoDias(e.target.value)} placeholder="29" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"/></div>
+                    <div className="pt-4 flex justify-end"><button type="button" onClick={() => setLoanModalOpen(false)} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md mr-2 hover:bg-gray-300">Cancelar</button><button type="submit" className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Registrar Préstamo</button></div>
+                </form>
+            </div>
+        </div>
+      )}
+
+      {/* --- NOTIFICACIÓN TOAST --- */}
+      {notification.show && (
+        <div className={`fixed bottom-5 right-5 px-4 py-2 rounded-lg shadow-lg text-white ${notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
+            {notification.message}
+        </div>
+      )}
     </div>
   );
 }
