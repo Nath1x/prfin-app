@@ -17,11 +17,11 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// --- CORRECCIÓN: Configuración de la conexión a la base de datos para Render ---
+// --- CORRECCIÓN DEFINITIVA: Configuración de la conexión para Render ---
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL, // Render usa una Connection String
     ssl: {
-        rejectUnauthorized: false // Permite la conexión SSL sin verificar el certificado (para Render)
+        rejectUnauthorized: false // Requerido para conexiones a Render DB
     }
 });
 
