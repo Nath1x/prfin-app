@@ -13,7 +13,7 @@ const FeatureIcon = ({ children }) => (
     </div>
 );
 
-// --- NUEVO: Componentes SVG para la sección de confianza ---
+// --- Componentes SVG para la sección de confianza ---
 const TrustLogo = ({ name, path }) => (
     <div className="col-span-2 flex justify-center items-center max-h-12 w-full object-contain lg:col-span-1">
         <svg className="h-10 w-auto text-gray-400 hover:text-indigo-600 transition-colors" fill="currentColor" viewBox="0 0 120 30" xmlns="http://www.w3.org/2000/svg">
@@ -57,30 +57,31 @@ const App = () => {
         setPagoDiario(cuotaDiaria);
     }, [monto]);
 
-    // Efecto para la animación del monto mostrado
+    // ==================================================================
+    // === CORRECCIÓN: Lógica de animación del monto mucho más robusta ===
+    // ==================================================================
     useEffect(() => {
         const targetMonto = parseFloat(monto);
-        const currentDisplay = parseFloat(displayMonto);
-        if (currentDisplay === targetMonto) return;
-
-        const diff = targetMonto - currentDisplay;
-        const step = diff / 15; // Animar en 15 frames
+        cancelAnimationFrame(animationFrameId.current);
 
         const animate = () => {
-            if (Math.abs(displayMonto - targetMonto) < Math.abs(step)) {
-                setDisplayMonto(targetMonto);
-                cancelAnimationFrame(animationFrameId.current);
-            } else {
-                setDisplayMonto(prev => prev + step);
+            setDisplayMonto(prevDisplay => {
+                const diff = targetMonto - prevDisplay;
+                // Si la diferencia es muy pequeña, detenemos la animación y fijamos el valor final.
+                if (Math.abs(diff) < 1) {
+                    return targetMonto;
+                }
+                // Movemos el 10% de la distancia restante en cada frame para un efecto suave.
+                const step = diff * 0.1;
                 animationFrameId.current = requestAnimationFrame(animate);
-            }
+                return prevDisplay + step;
+            });
         };
-
-        cancelAnimationFrame(animationFrameId.current);
+        
         animationFrameId.current = requestAnimationFrame(animate);
 
         return () => cancelAnimationFrame(animationFrameId.current);
-    }, [monto]);
+    }, [monto]); // Este efecto se ejecuta cada vez que el 'monto' objetivo cambia.
 
     // Efecto para la animación automática de la calculadora
     useEffect(() => {
