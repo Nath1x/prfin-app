@@ -23,7 +23,8 @@
          const telefono_whatsapp = `+52${telefono}`; // Unimos el prefijo antes de enviar
 
          try {
-             const response = await fetch(import.meta.env.VITE_API_URL + '/api/login', {
+             // --- CORRECCIÓN: Apuntamos a la nueva URL del backend en Render ---
+             const response = await fetch('https://prfin-backend.onrender.com/api/login', {
                  method: 'POST',
                  headers: { 'Content-Type': 'application/json' },
                  body: JSON.stringify({ telefono_whatsapp, password }),
