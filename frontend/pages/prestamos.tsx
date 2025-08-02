@@ -1,11 +1,20 @@
-import { useEffect, useState } from 'react';
-import { getPrestamos } from '../services/api';
+import { useState, useEffect } from 'react';
+
+interface Prestamo {
+  id: number;
+  cliente: string;
+  monto: number;
+  estado: string;
+}
 
 export default function PrestamosPage() {
-  const [prestamos, setPrestamos] = useState([]);
+  const [prestamos, setPrestamos] = useState<Prestamo[]>([]);
 
   useEffect(() => {
-    getPrestamos().then(data => setPrestamos(data));
+    fetch('https://prfin-backend.onrender.com/api/prestamos')
+      .then(res => res.json())
+      .then(data => setPrestamos(data))
+      .catch(error => console.error('Error:', error));
   }, []);
 
   return (
@@ -17,7 +26,9 @@ export default function PrestamosPage() {
             <div className="font-medium">{prestamo.cliente}</div>
             <div className="flex justify-between">
               <span>${prestamo.monto.toLocaleString()}</span>
-              <span className={prestamo.estado === "Al día" ? "text-green-600" : "text-red-600"}>
+              <span className={
+                prestamo.estado === "Al día" ? "text-green-600" : "text-red-600"
+              }>
                 {prestamo.estado}
               </span>
             </div>
